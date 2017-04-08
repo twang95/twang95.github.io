@@ -1,1 +1,69 @@
-Hello World
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
+<head>
+<style>  
+    div.padded {  
+      padding-top: 0px;  
+      padding-right: 100px;  
+      padding-bottom: 0.25in;  
+      padding-left: 100px;  
+    }  
+  </style> 
+<title>Light Field Camera</title>
+<meta http-equiv="content-type" content="text/html; charset=utf-8" />
+<link rel="stylesheet" type="text/css" href="style.css" media="screen" />
+</head>
+<body>
+<br />
+<h1 align="middle">Light Field Camera</h1>
+    <h4 align="middle">Albert Bierley, Tony Wang</h2>
+
+<h2 align="middle">Summary</h2>
+<p>
+	For our final project, we decided that we want to add light field camera functionality into project 3. By doing so, we would be taking in far more information per pixel, like the radiance coming in from different directions. Once we have implemented it completely, we should be able to move around in the scene and refocus within the scene, even after rendering the initial image. 
+</p>
+
+<h2 align="middle">Problem Description</h2>
+<p>
+	Currently, in normal photographs, once a photo is taken, it's stuck there forever and you're not able to see any more in the scene besides what's displayed. While this is great, sometimes it would be nice to see things from a different point of view or to refocus a bad picture on a better location. By implementing a light field camera, we would be able to do all of these things. 
+</p>
+<p>
+	In order to implement the light field camera, we will have to change the way each pixel takes in light. For each pixel, instead of taking in a single radiance from a single direction, we will be recording the radiance from many different incoming directions. By doing so, we can then easily slice the information that we've collected in ways to change the aperture, focal length, point of view (where the camera's located), and many other fields. 
+</p>
+
+<h2 align="middle">Goals and Deliverables</h2>
+<p>
+	For this project, we plan on being able to deliver a fully functional light field camera. What this entails is that our images will have all of the data a light field camera would have recorded, aka the 4D light field. From there, we plan on being able to implement a way to be able to take any image rendered in this fashion, and be able to change where the focus is within the image.
+	To break up the deliverables up further, we need to be able to 1) be able to collect all of the data properly for every single pixel (collect all the radiances from all directions properly), 2) transform and slice the data correctly, then 3) render the new 2D image. Creating the ability to change the image's focus location would then be a matter of slicing the data correctly so that we can render the correct image. While all of these things seem very doable, we're worried about how long it will take to get the functions up and running, since debugging them seem difficult until we can see the images, which would be much further down the pipeline. 
+</p>
+<p>
+	Asssuming we can actually figure out everything ahead of schedule, we hope to implement a fully functional GUI that allows us to not only refocus the image wherever we like, but also be able to move around in the image, so that we can almost walk side-to-side, or even into the image. If we have the opportunity to do so, we would also like to try making more complex images with more data, so that we could create incredibly immersive images, where we could show off many different focal points/as well as many different points of view. 
+</p>
+
+<h2 align="middle">Schedule</h2>
+<p>
+	Week 1: Do a lot of research figure out how to structure and implement our project. We plan on working off of project 3, but knowing what new files to add, what to add in those files, and how to structure the code in a way that allows us to efficiently write the project and execute it in a manner that's effective. We want to make sure that once we start coding, we don't have to scrap our previous work in order to restructure the project. In addition, during this time, we would love to meet with Professor Ng or a GSI about the topic, and really make sure that we're getting the concepts of our project right, because otherwise we'd spend the whole project coding up something that doesn't work.
+</p>
+<p>
+	Week 2: Get started on actually coding the project, and hopefully be able to successfully implement the new grid for each pixel, and hopefully have a way to test the correctness of our grid before we move on to slicing. 
+</p>
+<p>
+	Week 3: Implement the ability to retrieve slices of data from our grids, so that we can successfully render images with different focuses, and maybe other features if we can figure them out quickly as well. 
+</p>
+<p>
+	Week 4: Create the GUI for our images, so that we can easily switch between focuses and also easily show off any other features that we could easily implement off of our initial grid of information. 
+</p>
+
+<h2 align="middle">Resources</h2>
+
+<p>
+	Papers: Fourier Slice Photography by Ren Ng; Light Field Rendering by Marc Levoy and Pat Hanrahan; Dynamically Reparameterized Light Fields by Aaron Isaksen, Leonard McMillan, Steven J. Gortler
+</p>
+
+</div>
+</body>
+</html>
+
+
+
+

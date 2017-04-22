@@ -1,0 +1,17 @@
+CS184 Final Project Notes
+
+General Idea: 
+- new distance to object: microlens focal distance + lens focal distance
+- can easily calculate where on the microlens we are (sampling)
+    - do the same thing as before, but with the microlens as the second location
+    - also need to make sure ray actually hits the lens
+        - if not, then continue sampling
+    - final ray that we output is the one that goes from main lens to object
+- need to store things differently, so need to edit the method that calls this
+- need to store radiance, so the direction (not just the total sum)
+    - but when recreating the image, need to sum it all up
+- Need to find ratio between microlenses and main lens such that we use as many photosensor pixels as possible
+
+Implementation Notes:
+- image plane still at 1, but plane of focus is now at - (lens_focal_distance + microlens_focal_distance)
+- first lens is at 0, second lens is at lens_focal_distance

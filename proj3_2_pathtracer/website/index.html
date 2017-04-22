@@ -1,0 +1,169 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
+<head>
+<style>
+  body {
+    padding: 100px;
+    width: 1000px;
+    margin: auto;
+    text-align: left;
+    font-weight: 300;
+    font-family: 'Open Sans', sans-serif;
+    color: #121212;
+  }
+  h1, h2, h3, h4 {
+    font-family: 'Source Sans Pro', sans-serif;
+  }
+</style>
+<title>CS 184 Ray Tracer, Part 2</title>
+<meta http-equiv="content-type" content="text/html; charset=utf-8" />
+<link href="https://fonts.googleapis.com/css?family=Open+Sans|Source+Sans+Pro" rel="stylesheet">
+</head>
+
+<body>
+
+<h1 align="middle">CS 184: Computer Graphics and Imaging, Spring 2017</h1>
+<h1 align="middle">Project 3-2: Ray Tracer, Part 2</h1>
+<h2 align="middle">Tony Wang, CS184-aaz</h2>
+
+<br><br>
+
+<div>
+
+<h2 align="middle">Overview</h2>
+<p>
+In this project, we continued ray tracing, and used it to do many different applications. In the first part, we used it to create different materials, like mirrors and glass, by extending off of the BRDF stuff from part 1, but having different properties of each one. This included implementing reflection and refraction, so that each material could react differently to the light. In the second part, we also implemented materials, but this time we implemented microfacet materials in general. This way, we were able to implement different materials, like gold, copper, and graphite. After that, we used ray tracing to implement environment lights (from an infinite distance away), to make things look more realistic. We did this using importance sampling and probabilities in order to create a more realistic scene. Finally, we added perspective and depth of field, so that the scene was seen through a lens (and in a much more realistic fashion). 
+</p>
+
+<h2 align="middle">Part 1: Mirror and Glass Materials</h2>
+
+  <div align="center">
+    <table style="width=100%">
+      <tr>
+        <td align="middle">
+        <img src="images/spheres_0.png" width="480px" />
+        <figcaption align="middle">Completely Dark</figcaption>
+        <td align="middle">
+        <img src="images/spheres_1.png" width="480px" />
+        <figcaption align="middle">Things are visible, but no refraction</figcaption>
+        <td align="middle">
+        <img src="images/spheres_2.png" width="480px" />
+        <figcaption align="middle">Refraction exists, but the reflected refracted ball is dark still</figcaption>
+      </tr>
+      <tr>
+        <td align="middle">
+        <img src="images/spheres_3.png" width="480px" />
+        <figcaption align="middle">The reflection looks more natural now</figcaption>
+        <td align="middle">
+        <img src="images/spheres_4.png" width="480px" />
+        <figcaption align="middle">Around the same as 3, not much change from here</figcaption>
+        <td align="middle">
+        <img src="images/spheres_5.png" width="480px" />
+      </tr>
+      <tr>
+        <td align="middle">
+        <img src="images/spheres_100.png" width="480px" />
+      </tr>
+    </table>
+  </div>
+
+<h2 align="middle">Part 2: Microfacet Material</h2>
+<div align="center">
+    <table style="width=100%">
+      <tr>
+        <td align="middle">
+        <img src="images/dragon_005.png" width="480px" />
+        <figcaption align="middle">Alpha Value: 0.005, very dark</figcaption>
+        <td align="middle">
+        <img src="images/dragon_05.png" width="480px" />
+        <figcaption align="middle">Alpha Value: 0.05, fairly dark</figcaption>
+      </tr>
+      <tr>
+        <td align="middle">
+        <img src="images/dragon_25.png" width="480px" />
+        <figcaption align="middle">Alpha Value: 0.25, much brighter</figcaption>
+        <td align="middle">
+        <img src="images/dragon_5.png" width="480px" />
+        <figcaption align="middle">Alpha Value: 0.5, nice golden sheen</figcaption>
+      </tr>
+      <tr>
+        <td align="middle">
+        <img src="images/bunny_cu_default.png" width="480px" />
+        <figcaption align="middle">Default one: has more noise</figcaption>
+        <td align="middle">
+        <img src="images/bunny_cu.png" width="480px" />
+        <figcaption align="middle">My rendering: a little less noise than the default</figcaption>
+      </tr>
+      <tr>
+        <td align="middle">
+        <img src="images/dragon_graphite.png" width="480px" />
+        <figcaption align="middle">Dragon with graphite material!</figcaption>
+      </tr>
+    </table>
+  </div>
+
+<h2 align="middle">Part 3: Environment Light</h2>
+<table style="width=100%">
+  <tr>
+    <td align="middle">
+    <img src="images/field.jpg" width="480px" />
+    <figcaption align="middle">Using the field exr file for everything</figcaption>
+  </tr>
+  <tr>
+    <td align="middle">
+    <img src="images/bunny_unlit_importance_bkgd.png" width="480px" />
+    <figcaption align="middle">Unlit Importance Sampling, noise levels are about even</figcaption>
+    <td align="middle">
+    <img src="images/bunny_unlit_uniform_bkgd.png" width="480px" />
+    <figcaption align="middle">Unlit Uniform Sampling</figcaption>
+  </tr>
+  <tr>
+    <td align="middle">
+    <img src="images/bunny_importance_bkgd.png" width="480px" />
+    <figcaption align="middle"> Importance Sampling, seems like it has a tiny bit more noise</figcaption>
+    <td align="middle">
+    <img src="images/bunny_uniform_bkgd.png" width="480px" />
+    <figcaption align="middle"> Uniform Sampling</figcaption>
+  </tr>
+</table>
+
+<h2 align="middle">Part 4: Depth of Field</h2>
+<table style="width=100%">
+  <tr>
+    <td align="middle">
+    <img src="images/dragon_apt_0.01.png" width="480px" />
+    <figcaption align="middle">Apature: 0.01, Focal Length: 1.25</figcaption>
+    <td align="middle">
+    <img src="images/dragon_apt_0.03.png" width="480px" />
+    <figcaption align="middle">Apature: 0.03, Focal Length: 1.25</figcaption>
+  </tr>
+  <tr>
+    <td align="middle">
+    <img src="images/dragon_apt_0.045.png" width="480px" />
+    <figcaption align="middle">Apature: 0.045, Focal Length: 1.25</figcaption>
+    <td align="middle">
+    <img src="images/dragon_apt_0.06.png" width="480px" />
+    <figcaption align="middle">Apature: 0.06, Focal Length: 1.25</figcaption>
+  </tr>
+  <tr>
+    <td align="middle">
+    <img src="images/dragon_focus_1.png" width="480px" />
+    <figcaption align="middle">Apature: 0.03, Focal Length: 1</figcaption>
+    <td align="middle">
+    <img src="images/dragon_focus_1.5.png" width="480px" />
+    <figcaption align="middle">Apature: 0.03, Focal Length: 1.5</figcaption>
+  </tr>
+  <tr>
+    <td align="middle">
+    <img src="images/dragon_focus_2.png" width="480px" />
+    <figcaption align="middle">Apature: 0.03, Focal Length: 2</figcaption>
+    <td align="middle">
+    <img src="images/dragon_focus_2.5.png" width="480px" />
+    <figcaption align="middle">Apature: 0.03, Focal Length: 2.5</figcaption>
+  </tr>
+</table>
+
+
+</div>
+</body>
+</html>

@@ -697,8 +697,13 @@ Spectrum PathTracer::raytrace_pixel(size_t x, size_t y) {
     } else {
       sample_point = origin + gridSampler->get_sample();
     }
+    // need one for microlens, and one for main lens
+    Vector2D microlens_samples = gridSampler->get_sample();
     Vector2D ray_samples = gridSampler->get_sample();
-    Ray r = camera->generate_ray_for_thin_lens((double) sample_point.x / sampleBuffer.w, (double) sample_point.y / sampleBuffer.h, ray_samples.x, ray_samples.y);
+    Ray microR = camera->generate_ray_for_microlens((double) sample_point.x / sampleBuffer.w, (double) sample_point.y / sampleBuffer.h, ray_samples.x, ray_samples.y, microlens_samples.x, microlens_samples.y);
+
+    // Vector2D ray_samples = gridSampler->get_sample();
+    // Ray r = camera->generate_ray_for_thin_lens((double) microR.x / sampleBuffer.w, (double) sample_point.y / sampleBuffer.h, ray_samples.x, ray_samples.y);
     r.depth = max_ray_depth;
     Spectrum newSpec = trace_ray(r, true);
     s += newSpec;

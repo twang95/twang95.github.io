@@ -34,6 +34,7 @@ PathTracer::PathTracer(size_t ns_aa,
                        HDRImageBuffer* envmap,
                        string filename,
                        double lensRadius,
+                       double microlensRadius,
                        double focalDistance) {
   state = INIT,
   this->ns_aa = ns_aa;
@@ -45,6 +46,7 @@ PathTracer::PathTracer(size_t ns_aa,
   this->samplesPerBatch = samples_per_batch;
   this->maxTolerance = max_tolerance;
   this->lensRadius = lensRadius;
+  this->microlensRadius = microlensRadius;
   this->focalDistance = focalDistance;
 
   this->filename = filename;
@@ -117,6 +119,7 @@ void PathTracer::set_camera(Camera *camera) {
 
   this->camera->lensRadius = lensRadius;
   this->camera->focalDistance = focalDistance;
+  this->camera->microlensRadius = microlensRadius;
   
   if (has_valid_configuration()) {
     state = READY;

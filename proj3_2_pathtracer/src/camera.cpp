@@ -206,18 +206,16 @@ Ray Camera::generate_ray_for_thin_lens(double x, double y, double rndR, double r
 
 
 Ray Camera::generate_ray_for_microlens(double x, double y, double rndR, double rndTheta, double rngMicroR, double rngMicroTheta) const {
-  //Todo 3-2, Task 4:
-  // compute position and direction of ray from the input sensor sample coordinate.
-  // Note: use rndR and rndTheta to uniformly sample a unit disk.
-  
   Vector3D bottomLeft = Vector3D(-tan(radians(hFov)*.5), -tan(radians(vFov)*.5),-1);
   Vector3D topRight = Vector3D( tan(radians(hFov)*.5),  tan(radians(vFov)*.5),-1);
 
   double newX = bottomLeft.x * (1.0 - x) + topRight.x * x;
   double newY = bottomLeft.y * (1.0 - y) + topRight.y * y;
 
+  double microlensRadius = lensRadius / 100.0;
+
   // new start location to the red vector
-  Vector3D pMicroLens = Vector3D(focalDistance * sqrt(rndR) * cos(2.0 * PI * rndTheta), focalDistance * sqrt(rndR) * sin(2.0 * PI * rndTheta), 0.0);
+  Vector3D pMicroLens = Vector3D(microlensRadius * sqrt(rndMicroR) * cos(2.0 * PI * rndMicroR), microlensRadius * sqrt(rndMicroR) * sin(2.0 * PI * rndMicroR), 0.0);
   
   double mlX = pMicroLens.x;
   double mlY = pMicroLens.y;
@@ -225,7 +223,7 @@ Ray Camera::generate_ray_for_microlens(double x, double y, double rndR, double r
   Vector3D r_d = Vector3D(mlX, mlY, -focalDistance);
 
   // location the ray hits on the main lens
-  Vector3D pLens = pMicroLens + r_d * (focalDistance);
+  Vector3D pLens = Vector3D(lensRadius * sqrt(rndR) * cos(2.0 * PI * rndTheta), lensRadius * sqrt(rndR) * sin(2.0 * PI * rndTheta), -focalDistance);
   // location where the ray hits the object
   Vector3D pFocus = pMicroLens + r_d * (focalDistance);
 

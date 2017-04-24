@@ -93,9 +93,6 @@ class Camera {
   double lensRadius;
   double focalDistance;
 
-  // Microlens aperture and focal distance for light field camera 
-  double microlensRadius;
-
  private:
   // Computes pos, screenXDir, screenYDir from target, r, phi, theta.
   void compute_position();

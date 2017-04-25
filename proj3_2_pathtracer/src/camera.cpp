@@ -212,6 +212,9 @@ Ray Camera::generate_ray_for_microlens(double x, double y, double rndR, double r
   double newX = bottomLeft.x * (1.0 - x) + topRight.x * x;
   double newY = bottomLeft.y * (1.0 - y) + topRight.y * y;
 
+  double width = topRight.x - bottomLeft.x;
+  double height = topRight.y - bottomLeft.y;
+
   // How much smaller the microlens radius is compared to the lens radius, there will be
   // microlensSize^2 microlenses
   double microlensSize = 1000.0;
@@ -220,8 +223,8 @@ Ray Camera::generate_ray_for_microlens(double x, double y, double rndR, double r
   double microlensXIndex = (newX - fmod(newX, microlensSize)) / microlensSize;
   double microlensYIndex = (newY - fmod(newY, microlensSize)) / microlensSize;
 
-  double microlensXCoord = newX + microlensXIndex / microlensSize;
-  double microlensYCoord = newY + microlensYIndex / microlensSize;
+  double microlensXCoord = (microlensXIndex / microlensSize) * width;
+  double microlensYCoord = (microlensYIndex / microlensSize) * height;
 
   // new start location to the red vector
   Vector3D pMicroLens = Vector3D(microlensRadius * sqrt(rndMicroR) * cos(2.0 * PI * rndMicroR) + microlensXCoord, microlensRadius * sqrt(rndMicroR) * sin(2.0 * PI * rndMicroR) + microlensYCoord, 0.0);

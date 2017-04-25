@@ -8,6 +8,11 @@
       padding-bottom: 0.25in;  
       padding-left: 100px;  
     }  
+    img, video {
+      display:block;
+      margin-left: auto;
+      margin-right: auto;
+    }
   </style> 
 <title>Milestone</title>
 <meta http-equiv="content-type" content="text/html; charset=utf-8" />
@@ -19,19 +24,32 @@
 
 <h2 align="middle">Status Report</h2>
 <p>
-	
+	Our project was to incorporate light field camera functionality into project 3, the ray tracing project. So far, we have stuck to our schedule and are making progress towards our goal. In the writeup below we will detail the timeline of the work we've completed so far, some details about the work we have accomplished, and how our current progress influences our outlook on the rest of the project and the planned future work schedule.
+</p>
+
+<p>
+	Initially, shortly after we decided on our project, we completed some introductory research into light field cameras and the technology surrounding them. We found that Professor Ren Ng has conducted a lot of research on the subject of light field cameras and figured that it would be very beneficial to schedule a meeting with him to discuss the project and the goals that we hoped to achieve with its implementation. By the time we met with Professor Ng, we had a general idea of how light field cameras worked and were able to explain our understanding of the topic and hear some suggestions about what we might like to try to implement beyond refocusing an image once it has been rendered. Professor Ng also recommended a couple of papers going into greater detail on the technology behind light field cameras than lecture. We spent the next week watching the CS184 lectures on light field cameras and reading the papers that Professor Ng suggested. However, as the second midterm loomed on the horizon, we temporarily diminished the amount of time we spent on the project and concentrated our efforts on studying for the midterm.
+</p>
+
+<p>
+	Once the midterm was completed, we had more freedom to return to working on the project. We considered the work schedule that we initially detailed in the project proposal, which stated that we planned on spending our first week researching light field cameras and actually coming up with a design that would efficiently accomplish our goals. We wanted to avoid a situation where we wrote code that was incorrect and would cause us to have to backtrack and rewrite the code, or redesign our implementation of the light field camera. After reading a couple of the papers that were suggested to us and getting a better idea of the design of a light field camera, we had a better foundation upon which to approach additions to project 3 to implement light field cameras. 
+</p>
+
+<p>
+	The first thing we decided to implement was the actual physical light field camera layout. We rationalized that a light field camera's construction is very similar in concept to a regular camera's construction. Therefore, as we started considering ways to actually code the camera's functionality, we reviewed the diagram that was included in the instructions for project 3-2 part 4. This diagram showed the relation between an image plane, a thin lens, and the plane of focus. The diagram basically displayed how to get from the implementation we had previously been using, one that rendered with the same concept as a pinhole camera, to the one that we ended up with at the culmination of project 3-2, a camera that rendered by modeling a thin lens. We realized that this diagram was applicable to light field cameras, and that we could basically just extend the logic to include an extra layer of depth, that being the microlens array. As a result, we developed a new method that worked much the same way as the generate_ray_for_thin_lens method, but instead included microlens functionality. In this method, given a specific number of microlenses that were to be present in the microlens array, we calculated the index of the specific microlens that would correspond to a location on the image plane. We then converted this index back to coordinates, accounting for the layout of the microlenses, in order to get the coordinates of the microlens that was relevant for the specific ray we were tracing. We then sampled randomly around this coordinate in order to calculate a starting point for the ray. By tracing this ray through the main lens and out to the object, we are able to effectively calculate the way how a ray would make its way through the camera.
+</p>
+
+<p>
+	One of the first things that we plan on doing next is wrapping up our implementation of the physical aspects of the light field camera. Currently, we trace a ray from the microlens to the center of the main lens, then randomly sample a point on the main lens to send a ray out to the object. We now realize that this isn't an accurate implementation and that we will need to ensure that the ray going from the microlens to the main lens is connected to the one going from the main lens out to the object, as this is how a real lens works. After this, we plan on implementing a way to capture the radiance for the light field and retrieve the data in slices as is necessary for rendering images with a light field camera. If we are able to complete this by the end of the third week, as is stated on our initial project proposal, we plan to implement further features beyond the refocusing of rendered images. In our fourth week, we plan on wrapping up the implementation of our light field camera and creating a GUI so that we can easily demonstrate how our light field camera is able to switch between focuses and also display other features that we may potentially implement.
 </p>
 
 <h2 align="middle">Video</h2>
-<p>
-
-</p>
+  <video controls="controls" width="800" height="600" name="Milestone Video" src="img/video.mov"></video>
 
 <h2 align="middle">Slides</h2>
-<p>
-
-</p>
-</div>
+<img src="img/slide1.png" width="750px">
+<img src="img/slide2.png" width="750px">
+<img src="img/slide3.png" width="750px">
 </body>
 </html>
 

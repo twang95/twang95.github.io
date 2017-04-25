@@ -212,15 +212,22 @@ Ray Camera::generate_ray_for_microlens(double x, double y, double rndR, double r
   double newX = bottomLeft.x * (1.0 - x) + topRight.x * x;
   double newY = bottomLeft.y * (1.0 - y) + topRight.y * y;
 
-  double microlensRadius = lensRadius / 1000.0;
+  // How much smaller the microlens radius is compared to the lens radius, there will be
+  // microlensSize^2 microlenses
+  double microlensSize = 1000.0;
+  double microlensRadius = lensRadius / microlensSize;
+
+  double microlensXIndex = (newX - fmod(newX, microlensSize)) / microlensSize;
+  double microlensYIndex = (newY - fmod(newY, microlensSize)) / microlensSize;
+
+  double microlensXCoord = newX + microlensXIndex / microlensSize;
+  double microlensYCoord = newY + microlensYIndex / microlensSize;
 
   // new start location to the red vector
-  Vector3D pMicroLens = Vector3D(microlensRadius * sqrt(rndMicroR) * cos(2.0 * PI * rndMicroR), microlensRadius * sqrt(rndMicroR) * sin(2.0 * PI * rndMicroR), 0.0);
-  
-  double mlX = pMicroLens.x;
-  double mlY = pMicroLens.y;
+  Vector3D pMicroLens = Vector3D(microlensRadius * sqrt(rndMicroR) * cos(2.0 * PI * rndMicroR) + microlensXCoord, microlensRadius * sqrt(rndMicroR) * sin(2.0 * PI * rndMicroR) + microlensYCoord, 0.0);
+
   // Direction from microlens to center of main lens
-  Vector3D r_d = Vector3D(mlX, mlY, -focalDistance);
+  Vector3D r_d = Vector3D(s, t, -focalDistance);
 
   // location the ray hits on the main lens
   Vector3D pLens = Vector3D(lensRadius * sqrt(rndR) * cos(2.0 * PI * rndTheta), lensRadius * sqrt(rndR) * sin(2.0 * PI * rndTheta), -focalDistance);

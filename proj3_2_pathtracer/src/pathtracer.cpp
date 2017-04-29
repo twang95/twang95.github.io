@@ -699,7 +699,7 @@ Spectrum PathTracer::raytrace_pixel(size_t x, size_t y) {
     }
     // need one for microlens, and one for main lens
     Vector2D ray_samples = gridSampler->get_sample();
-    Ray r = camera->generate_ray_for_microlens((double) sample_point.x / sampleBuffer.w, (double) sample_point.y / sampleBuffer.h, origin.x / sampleBuffer.w, origin.y / sampleBuffer.h, ray_samples.x, ray_samples.y);
+    Ray r = camera->generate_ray_for_microlens((double) sample_point.x / sampleBuffer.w, (double) sample_point.y / sampleBuffer.h, origin.x, origin.y, ray_samples.x, ray_samples.y);
 
     // Vector2D ray_samples = gridSampler->get_sample();
     // Ray r = camera->generate_ray_for_thin_lens((double) microR.x / sampleBuffer.w, (double) sample_point.y / sampleBuffer.h, ray_samples.x, ray_samples.y);
@@ -734,13 +734,13 @@ Spectrum PathTracer::raytrace_pixel(size_t x, size_t y) {
   // }
   for (int i = 0; i < 16; i++) {
     for (int j = 0; j < 16; j++) {
-        spec += std::get<1>(camera->lightField[origin.x][origin.y][i][j]);
+      int count = (std::get<0>(camera->lightField[origin.x][origin.y][(double) i][(double) j]));
+      Spectrum toAdd = (std::get<1>(camera->lightField[origin.x][origin.y][(double) i][(double) j]));
+      spec += toAdd / (double) count;
     }
   }
-  if (spec.r > 0.0) {
-    printf("spec r: %f\n", spec.r);
-  }
-  return spec / (256.0f);
+  Spectrum result = spec / (256.0f);
+  return result;
 
 
 }

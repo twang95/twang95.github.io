@@ -34,7 +34,6 @@ PathTracer::PathTracer(size_t ns_aa,
                        HDRImageBuffer* envmap,
                        string filename,
                        double lensRadius,
-                       double microlensRadius,
                        double focalDistance) {
   state = INIT,
   this->ns_aa = ns_aa;
@@ -46,7 +45,6 @@ PathTracer::PathTracer(size_t ns_aa,
   this->samplesPerBatch = samples_per_batch;
   this->maxTolerance = max_tolerance;
   this->lensRadius = lensRadius;
-  this->microlensRadius = microlensRadius;
   this->focalDistance = focalDistance;
 
   this->filename = filename;
@@ -119,7 +117,6 @@ void PathTracer::set_camera(Camera *camera) {
 
   this->camera->lensRadius = lensRadius;
   this->camera->focalDistance = focalDistance;
-  this->camera->microlensRadius = microlensRadius;
   
   if (has_valid_configuration()) {
     state = READY;
@@ -703,12 +700,20 @@ Spectrum PathTracer::raytrace_pixel(size_t x, size_t y) {
     // need one for microlens, and one for main lens
     Vector2D microlens_samples = gridSampler->get_sample();
     Vector2D ray_samples = gridSampler->get_sample();
-    Ray microR = camera->generate_ray_for_microlens((double) sample_point.x / sampleBuffer.w, (double) sample_point.y / sampleBuffer.h, ray_samples.x, ray_samples.y, microlens_samples.x, microlens_samples.y);
+    Ray r = camera->generate_ray_for_microlens((double) sample_point.x / sampleBuffer.w, (double) sample_point.y / sampleBuffer.h, ray_samples.x, ray_samples.y, microlens_samples.x, microlens_samples.y);
+
+    // check to see if the ray from the microlens to the lens exists, if not, continue
+    if (r.max_t == -1) {
+      continue;
+    }
 
     // Vector2D ray_samples = gridSampler->get_sample();
     // Ray r = camera->generate_ray_for_thin_lens((double) microR.x / sampleBuffer.w, (double) sample_point.y / sampleBuffer.h, ray_samples.x, ray_samples.y);
     r.depth = max_ray_depth;
     Spectrum newSpec = trace_ray(r, true);
+    // Updates the lightField with the spectrum associated with the ray
+    // camera->update_lightField(r.u, r.v, r.s, r.t, newSpec);
+
     s += newSpec;
 
     s1 += newSpec.illum();

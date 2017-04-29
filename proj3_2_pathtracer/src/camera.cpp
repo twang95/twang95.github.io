@@ -205,7 +205,7 @@ Ray Camera::generate_ray_for_thin_lens(double x, double y, double rndR, double r
 }
 
 
-Ray Camera::generate_ray_for_microlens(double x, double y, double rndR, double rndTheta, double rngMicroR, double rngMicroTheta) const {
+Ray Camera::generate_ray_for_microlens(double x, double y, double rndR, double rndTheta, double rndMicroR, double rngMicroTheta) const {
   Vector3D bottomLeft = Vector3D(-tan(radians(hFov)*.5), -tan(radians(vFov)*.5),-1);
   Vector3D topRight = Vector3D( tan(radians(hFov)*.5),  tan(radians(vFov)*.5),-1);
 
@@ -220,22 +220,37 @@ Ray Camera::generate_ray_for_microlens(double x, double y, double rndR, double r
   double microlensSize = 1000.0;
   double microlensRadius = lensRadius / microlensSize;
 
-  double microlensXIndex = (newX - fmod(newX, microlensSize)) / microlensSize;
-  double microlensYIndex = (newY - fmod(newY, microlensSize)) / microlensSize;
+  double microlensXIndex = (x - fmod(x, 1.0 / microlensSize));
+  double microlensYIndex = (y - fmod(y, 1.0 / microlensSize));
 
-  double microlensXCoord = (microlensXIndex / microlensSize) * width;
-  double microlensYCoord = (microlensYIndex / microlensSize) * height;
+  // X and Y coordinates for the middle of the microlens
+  // double microlensXCoord = (microlensXIndex / microlensSize) * width + (microlensRadius);
+  // double microlensYCoord = (microlensYIndex / microlensSize) * height + (microlensRadius);
+  double microlensXCoord = bottomLeft.x * (1.0 - microlensXIndex) + topRight.x * microlensXIndex + microlensRadius;
+  double microlensYCoord = bottomLeft.y * (1.0 - microlensYIndex) + topRight.y * microlensYIndex + microlensRadius;
 
-  // new start location to the red vector
-  Vector3D pMicroLens = Vector3D(microlensRadius * sqrt(rndMicroR) * cos(2.0 * PI * rndMicroR) + microlensXCoord, microlensRadius * sqrt(rndMicroR) * sin(2.0 * PI * rndMicroR) + microlensYCoord, 0.0);
+  // new start location to the red vector, need this point to store in light field
+  Vector3D pMicroLens = Vector3D(microlensRadius * sqrt(rndMicroR) * cos(2.0 * PI * rndMicroR) + microlensXCoord, microlensRadius * sqrt(rndMicroR) * sin(2.0 * PI * rndMicroR) + microlensYCoord, -1.0);
 
-  // Direction from microlens to center of main lens
-  Vector3D r_d = Vector3D(s, t, -focalDistance);
+  // Direction from starting point to middle of microlens, need z = -1 though
+  Vector3D first_r_d = (1.0 / (1.0 + focalDistance)) * Vector3D(newX, newY, -1.0);
 
-  // location the ray hits on the main lens
-  Vector3D pLens = Vector3D(lensRadius * sqrt(rndR) * cos(2.0 * PI * rndTheta), lensRadius * sqrt(rndR) * sin(2.0 * PI * rndTheta), -focalDistance);
+  // location the ray hits on the main lens, used for light field
+  // middle of microlens + direction * focalDistance
+  Vector3D pLens = Vector3D(microlensXCoord, microlensYCoord, -1.0 + focalDistance) + (first_r_d * focalDistance);
+
+  // check to see whether or not the ray misses the main lens
+  if (pLens.x > lensRadius || pLens.x < -1.0 * lensRadius || pLens.y > lensRadius || pLens.y < -1.0 * lensRadius) {
+    Ray r = Ray(pLens + pos, first_r_d);
+    r.max_t = -1.0;
+    return r;
+  }
+
+  // direction from microlens array through the center of the main lens, z-value has to be -1
+  Vector3D second_r_d = (1.0 / focalDistance) * Vector3D(-1 * pMicroLens.x, -1 * pMicroLens.y, -focalDistance);
+
   // location where the ray hits the object
-  Vector3D pFocus = pMicroLens + r_d * (focalDistance);
+  Vector3D pFocus = second_r_d * (focalDistance);
 
   pLens = c2w * pLens;
   Vector3D dir = (pFocus - pLens).unit();
@@ -245,8 +260,17 @@ Ray Camera::generate_ray_for_microlens(double x, double y, double rndR, double r
   r.min_t = nClip;
   r.max_t = fClip;
 
+  // light field stuff
+  r.u = pMicroLens.x;
+  r.v = pMicroLens.y;
+  r.s = pLens.x;
+  r.t = pLens.y;
+
   return r;
 }
 
+void Camera::update_lightField(double u, double v, double s, double t, Spectrum spec) {
+  lightField[u][v][s][t] = spec;
+}
 
 } // namespace CGL

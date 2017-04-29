@@ -2,6 +2,7 @@
 #define CGL_CAMERA_H
 
 #include <iostream>
+#include <map>
 
 #include "collada/camera_info.h"
 #include "CGL/matrix3x3.h"
@@ -88,10 +89,16 @@ class Camera {
    */
   Ray generate_ray(double x, double y) const;
   Ray generate_ray_for_thin_lens(double x, double y, double rndR, double rndTheta) const;
+  Ray generate_ray_for_microlens(double x, double y, double rndR, double rndTheta, double rngMicroR, double rngMicroTheta) const;
 
   // Lens aperture and focal distance for depth of field effects.
   double lensRadius;
   double focalDistance;
+
+  // light field
+  std::map<double, std::map<double, std::map<double, std::map<double, Spectrum>>>> lightField;
+
+  void update_lightField(double u, double v, double s, double t, Spectrum spec);
 
  private:
   // Computes pos, screenXDir, screenYDir from target, r, phi, theta.

@@ -23,6 +23,11 @@ struct Ray {
   Vector3D inv_d;  ///< component wise inverse
   int sign[3];     ///< fast ray-bbox intersection
 
+  double u; ///< x-coordinate of ray on microlens array
+  double v; ///< y-coordinate of ray on microlens array
+  double s; ///< x-coordinate of ray on main lens
+  double t; ///< y-coordinate of ray on main lens
+
   /**
    * Constructor.
    * Create a ray instance with given origin and direction.

@@ -684,7 +684,7 @@ Spectrum PathTracer::raytrace_pixel(size_t x, size_t y) {
 
   int num_samples = ns_aa; // total samples to evaluate
   Vector2D origin = Vector2D((double) x, (double) y); // bottom left corner of the pixel
-  Spectrum s = Spectrum();
+  Spectrum spec = Spectrum();
 
   double s1 = 0.0f;
   double s2 = 0.0f;
@@ -708,30 +708,34 @@ Spectrum PathTracer::raytrace_pixel(size_t x, size_t y) {
 
     camera->update_lightField(r.u, r.v, r.s, r.t, newSpec);
 
-    s += newSpec;
+    // spec += newSpec;
 
-    s1 += newSpec.illum();
-    s2 += pow(newSpec.illum(), 2.0);
+    // s1 += newSpec.illum();
+    // s2 += pow(newSpec.illum(), 2.0);
 
-    if (samples_taken != 0 && samples_taken % samplesPerBatch == 0) {
-      double mean = s1 / (double) (samples_taken + 1);
-      double sd = sqrt( (1.0f / (double) samples_taken ) * (s2 - (s1 * s1) / (double) (samples_taken + 1)) );
-      double I = 1.96 * sd / sqrt((double) (samples_taken + 1));
-      if (I <= maxTolerance * mean) {
-        break;
-      }
-    }
+    // if (samples_taken != 0 && samples_taken % samplesPerBatch == 0) {
+    //   double mean = s1 / (double) (samples_taken + 1);
+    //   double sd = sqrt( (1.0f / (double) samples_taken ) * (s2 - (s1 * s1) / (double) (samples_taken + 1)) );
+    //   double I = 1.96 * sd / sqrt((double) (samples_taken + 1));
+    //   if (I <= maxTolerance * mean) {
+    //     break;
+    //   }
+    // }
   }
+  // sampleCountBuffer[y * sampleBuffer.w + x] = samples_taken + 1;
+  // return spec / (float) (samples_taken + 1); 
+
 
   // arbitrarily set it to 16x16 microlenses/buckets in the lens
-  // for (int i = 0; i < 16; i++) {
-  //   for (int j = 0; j < 16; j++) {
-      
-  //   }
-  // }
-
-  sampleCountBuffer[y * sampleBuffer.w + x] = samples_taken + 1;
-  return s / (float) (samples_taken + 1); 
+  for (int i = 0; i < 16; i++) {
+    for (int j = 0; j < 16; j++) {
+        spec += camera->lightField[origin.x][origin.y][i][j];
+    }
+  }
+  if (spec.r > 0.0) {
+    printf("spec r: %f\n", spec.r);
+  }
+  return spec / (256.0f);
 
 
 }

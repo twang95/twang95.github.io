@@ -213,8 +213,8 @@ Ray Camera::generate_ray_for_microlens(double x, double y, double originX, doubl
   double newY = bottomLeft.y * (1.0 - y) + topRight.y * y;
 
   // For light field storage
-  double s = bottomLeft.x * (1.0 - originX) + topRight.x * originY;
-  double t = bottomLeft.y * (1.0 - originY) + topRight.y * originY;
+  double s = originX;
+  double t = originY;
 
   // hard setting this right now to be 16 x 16, for 256 total microlenses
   double num_microlenses = 16.0;
@@ -245,7 +245,22 @@ Ray Camera::generate_ray_for_microlens(double x, double y, double originX, doubl
 }
 
 void Camera::update_lightField(double u, double v, double s, double t, Spectrum spec) {
-  lightField[u][v][s][t] = spec;
+  // See if lightField(u, v, s, t) exists
+  if (lightField.find(u) != lightField.end()) {
+    if (lightField[u].find(v) != lightField[u].end()) {
+      if (lightField[u][v].find(s) != lightField[u][v].end()) {
+        if (lightField[u][v][s].find(t) != lightField[u][v][s].end()) {
+          // it exists
+          lightField[u][v][s][t][0] += 1;
+          lightField[u][v][s][t][1] += spec;
+        } 
+      } 
+    } 
+  } else {
+    lightField[u][v][s][t] = vector<1, spec>;
+  }
+
+
 }
 
 } // namespace CGL

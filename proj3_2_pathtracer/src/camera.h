@@ -89,7 +89,7 @@ class Camera {
    */
   Ray generate_ray(double x, double y) const;
   Ray generate_ray_for_thin_lens(double x, double y, double rndR, double rndTheta) const;
-  Ray generate_ray_for_microlens(double x, double y, double rndR, double rndTheta, double rngMicroR, double rngMicroTheta) const;
+  Ray generate_ray_for_microlens(double x, double y, double originX, double originY, double rndR, double rndTheta)  const;
 
   // Lens aperture and focal distance for depth of field effects.
   double lensRadius;

@@ -698,21 +698,15 @@ Spectrum PathTracer::raytrace_pixel(size_t x, size_t y) {
       sample_point = origin + gridSampler->get_sample();
     }
     // need one for microlens, and one for main lens
-    Vector2D microlens_samples = gridSampler->get_sample();
     Vector2D ray_samples = gridSampler->get_sample();
-    Ray r = camera->generate_ray_for_microlens((double) sample_point.x / sampleBuffer.w, (double) sample_point.y / sampleBuffer.h, ray_samples.x, ray_samples.y, microlens_samples.x, microlens_samples.y);
-
-    // check to see if the ray from the microlens to the lens exists, if not, continue
-    if (r.max_t == -1) {
-      continue;
-    }
+    Ray r = camera->generate_ray_for_microlens((double) sample_point.x / sampleBuffer.w, (double) sample_point.y / sampleBuffer.h, origin.x / sampleBuffer.w, origin.y / sampleBuffer.h, ray_samples.x, ray_samples.y);
 
     // Vector2D ray_samples = gridSampler->get_sample();
     // Ray r = camera->generate_ray_for_thin_lens((double) microR.x / sampleBuffer.w, (double) sample_point.y / sampleBuffer.h, ray_samples.x, ray_samples.y);
     r.depth = max_ray_depth;
     Spectrum newSpec = trace_ray(r, true);
-    // Updates the lightField with the spectrum associated with the ray
-    // camera->update_lightField(r.u, r.v, r.s, r.t, newSpec);
+
+    camera->update_lightField(r.u, r.v, r.s, r.t, newSpec);
 
     s += newSpec;
 
@@ -728,6 +722,14 @@ Spectrum PathTracer::raytrace_pixel(size_t x, size_t y) {
       }
     }
   }
+
+  // arbitrarily set it to 16x16 microlenses/buckets in the lens
+  // for (int i = 0; i < 16; i++) {
+  //   for (int j = 0; j < 16; j++) {
+      
+  //   }
+  // }
+
   sampleCountBuffer[y * sampleBuffer.w + x] = samples_taken + 1;
   return s / (float) (samples_taken + 1); 
 

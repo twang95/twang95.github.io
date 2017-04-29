@@ -729,7 +729,7 @@ Spectrum PathTracer::raytrace_pixel(size_t x, size_t y) {
   // arbitrarily set it to 16x16 microlenses/buckets in the lens
   for (int i = 0; i < 16; i++) {
     for (int j = 0; j < 16; j++) {
-        spec += camera->lightField[origin.x][origin.y][i][j];
+        spec += std::get<1>(camera->lightField[origin.x][origin.y][i][j]);
     }
   }
   if (spec.r > 0.0) {

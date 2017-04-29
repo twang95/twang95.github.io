@@ -96,7 +96,7 @@ class Camera {
   double focalDistance;
 
   // light field
-  std::map<double, std::map<double, std::map<double, std::map<double, vector<int, Spectrum>>>>> lightField;
+  std::map<double, std::map<double, std::map<double, std::map<double, std::pair<int, Spectrum>>>>> lightField;
 
   void update_lightField(double u, double v, double s, double t, Spectrum spec);
 

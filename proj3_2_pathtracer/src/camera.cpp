@@ -251,13 +251,12 @@ void Camera::update_lightField(double u, double v, double s, double t, Spectrum 
       if (lightField[u][v].find(s) != lightField[u][v].end()) {
         if (lightField[u][v][s].find(t) != lightField[u][v][s].end()) {
           // it exists
-          lightField[u][v][s][t][0] += 1;
-          lightField[u][v][s][t][1] += spec;
+          lightField[u][v][s][t] = std::pair<int, Spectrum> (std::get<0>(lightField[u][v][s][t]) + 1, std::get<1>(lightField[u][v][s][t]) + spec);
         } 
       } 
     } 
   } else {
-    lightField[u][v][s][t] = vector<1, spec>;
+    lightField[u][v][s][t] = std::pair<int, Spectrum> (1, spec);
   }
 
 

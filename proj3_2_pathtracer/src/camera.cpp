@@ -225,8 +225,20 @@ Ray Camera::generate_ray_for_microlens(double x, double y, double originX, doubl
   Vector3D pFocus = r_d * (focalDistance);
 
   // bucket of the lens (or the microlens location)
-  double u = (num_microlenses * pLens.x - fmod(num_microlenses * pLens.x, 1.0));
-  double v = (num_microlenses * pLens.y - fmod(num_microlenses * pLens.y, 1.0));
+  double u = (num_microlenses * (pLens.x + lensRadius) - fmod(num_microlenses * (pLens.x + lensRadius), lensRadius * 2.0)) / (lensRadius * 2.0);
+  double v = (num_microlenses * (pLens.y + lensRadius) - fmod(num_microlenses * (pLens.y + lensRadius), lensRadius * 2.0)) / (lensRadius * 2.0);
+
+  printf("pLens.x: %f\n", pLens.x);
+  printf("pLens.y: %f\n", pLens.y);
+  printf("lensRadius: %f\n", lensRadius);
+  printf("before the mod u: %f\n", num_microlenses * (pLens.x + lensRadius));
+  printf("before the mod v: %f\n", num_microlenses * (pLens.y + lensRadius));
+  printf("the mod u: %f\n", fmod(num_microlenses * (pLens.x + lensRadius), 1.0));
+  printf("the mod v: %f\n", fmod(num_microlenses * (pLens.y + lensRadius), 1.0));
+  printf("after the mod u: %f\n", num_microlenses * (pLens.x + lensRadius) - fmod(num_microlenses * (pLens.x + lensRadius), 1.0));
+  printf("after the mod v: %f\n", num_microlenses * (pLens.y + lensRadius) - fmod(num_microlenses * (pLens.y + lensRadius), 1.0));
+  printf("u: %f\n", u);
+  printf("v: %f\n", v);
 
   pLens = c2w * pLens;
   Vector3D dir = (pFocus - pLens).unit();

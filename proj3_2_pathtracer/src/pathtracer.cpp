@@ -729,7 +729,9 @@ Spectrum PathTracer::raytrace_pixel(size_t x, size_t y) {
   // arbitrarily set it to 16x16 microlenses/buckets in the lens
   // for (std::map<double, std::map<double, std::pair<int, Spectrum>>>::iterator it=camera->lightField[origin.x][origin.y].begin(); it!=camera->lightField[origin.x][origin.y].end(); ++it) {
   //   for (std::map<double, std::pair<int, Spectrum>>::iterator it2=camera->lightField[origin.x][origin.y][it->first].begin(); it2!=camera->lightField[origin.x][origin.y][it->first].end(); ++it2) {
-  //     spec += std::get<1>(camera->lightField[origin.x][origin.y][it->first][it2->first]);
+  //     int count = std::get<0>(camera->lightField[origin.x][origin.y][it->first][it2->first]);
+  //     Spectrum toAdd = std::get<1>(camera->lightField[origin.x][origin.y][it->first][it2->first]);
+  //     spec += toAdd / (double) count;
   //   }
   // }
   for (int i = 0; i < 16; i++) {
@@ -737,9 +739,19 @@ Spectrum PathTracer::raytrace_pixel(size_t x, size_t y) {
       int count = (std::get<0>(camera->lightField[origin.x][origin.y][(double) i][(double) j]));
       Spectrum toAdd = (std::get<1>(camera->lightField[origin.x][origin.y][(double) i][(double) j]));
       spec += toAdd / (double) count;
+      // printf("toAdd r: %f\n", toAdd.r);
+      // printf("toAdd g: %f\n", toAdd.g);
+      // printf("toAdd b: %f\n", toAdd.b);
     }
   }
   Spectrum result = spec / (256.0f);
+  // printf("spec r: %f\n", spec.r);
+  // printf("spec g: %f\n", spec.g);
+  // printf("spec b: %f\n", spec.b);
+  // printf("result r: %f\n", result.r);
+  // printf("result g: %f\n", result.g);
+  // printf("result b: %f\n", result.b);
+
   return result;
 
 

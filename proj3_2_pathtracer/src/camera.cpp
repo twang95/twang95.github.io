@@ -228,18 +228,6 @@ Ray Camera::generate_ray_for_microlens(double x, double y, double originX, doubl
   double u = (num_microlenses * (pLens.x + lensRadius) - fmod(num_microlenses * (pLens.x + lensRadius), lensRadius * 2.0)) / (lensRadius * 2.0);
   double v = (num_microlenses * (pLens.y + lensRadius) - fmod(num_microlenses * (pLens.y + lensRadius), lensRadius * 2.0)) / (lensRadius * 2.0);
 
-  printf("pLens.x: %f\n", pLens.x);
-  printf("pLens.y: %f\n", pLens.y);
-  printf("lensRadius: %f\n", lensRadius);
-  printf("before the mod u: %f\n", num_microlenses * (pLens.x + lensRadius));
-  printf("before the mod v: %f\n", num_microlenses * (pLens.y + lensRadius));
-  printf("the mod u: %f\n", fmod(num_microlenses * (pLens.x + lensRadius), 1.0));
-  printf("the mod v: %f\n", fmod(num_microlenses * (pLens.y + lensRadius), 1.0));
-  printf("after the mod u: %f\n", num_microlenses * (pLens.x + lensRadius) - fmod(num_microlenses * (pLens.x + lensRadius), 1.0));
-  printf("after the mod v: %f\n", num_microlenses * (pLens.y + lensRadius) - fmod(num_microlenses * (pLens.y + lensRadius), 1.0));
-  printf("u: %f\n", u);
-  printf("v: %f\n", v);
-
   pLens = c2w * pLens;
   Vector3D dir = (pFocus - pLens).unit();
   dir = c2w * dir;
@@ -264,10 +252,53 @@ void Camera::update_lightField(double u, double v, double s, double t, Spectrum 
         if (lightField[u][v][s].find(t) != lightField[u][v][s].end()) {
           // it exists
           lightField[u][v][s][t] = std::pair<int, Spectrum> (std::get<0>(lightField[u][v][s][t]) + 1, std::get<1>(lightField[u][v][s][t]) + spec);
-        } 
+        } else {
+          // printf("===\nadded!\n");
+          // printf("spec r: %f\n", spec.r);
+          // printf("spec g: %f\n", spec.g);
+          // printf("spec b: %f\n", spec.b);
+
+          // printf("u: %f\n", u);
+          // printf("v: %f\n", v);
+          // printf("s: %f\n", s);
+          // printf("t: %f\n", t);
+          lightField[u][v][s][t] = std::pair<int, Spectrum> (1, spec);
+        }
       } 
-    } 
+      else {
+        // printf("===\nadded!\n");
+        // printf("spec r: %f\n", spec.r);
+        // printf("spec g: %f\n", spec.g);
+        // printf("spec b: %f\n", spec.b);
+
+        // printf("u: %f\n", u);
+        // printf("v: %f\n", v);
+        // printf("s: %f\n", s);
+        // printf("t: %f\n", t);
+        lightField[u][v][s][t] = std::pair<int, Spectrum> (1, spec);
+      }
+    } else {
+      // printf("===\nadded!\n");
+      // printf("spec r: %f\n", spec.r);
+      // printf("spec g: %f\n", spec.g);
+      // printf("spec b: %f\n", spec.b);
+
+      // printf("u: %f\n", u);
+      // printf("v: %f\n", v);
+      // printf("s: %f\n", s);
+      // printf("t: %f\n", t);
+      lightField[u][v][s][t] = std::pair<int, Spectrum> (1, spec);
+    }
   } else {
+    // printf("===\nadded!\n");
+    // printf("spec r: %f\n", spec.r);
+    // printf("spec g: %f\n", spec.g);
+    // printf("spec b: %f\n", spec.b);
+
+    // printf("u: %f\n", u);
+    // printf("v: %f\n", v);
+    // printf("s: %f\n", s);
+    // printf("t: %f\n", t);
     lightField[u][v][s][t] = std::pair<int, Spectrum> (1, spec);
   }
 

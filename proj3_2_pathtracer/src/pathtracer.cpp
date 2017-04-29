@@ -701,57 +701,37 @@ Spectrum PathTracer::raytrace_pixel(size_t x, size_t y) {
     Vector2D ray_samples = gridSampler->get_sample();
     Ray r = camera->generate_ray_for_microlens((double) sample_point.x / sampleBuffer.w, (double) sample_point.y / sampleBuffer.h, origin.x, origin.y, ray_samples.x, ray_samples.y);
 
-    // Vector2D ray_samples = gridSampler->get_sample();
-    // Ray r = camera->generate_ray_for_thin_lens((double) microR.x / sampleBuffer.w, (double) sample_point.y / sampleBuffer.h, ray_samples.x, ray_samples.y);
     r.depth = max_ray_depth;
     Spectrum newSpec = trace_ray(r, true);
 
+    // printf("r.u: %f\n", r.u);
+    // printf("r.v: %f\n", r.v);
+    // printf("r.s: %f\n", r.s);
+    // printf("r.t: %f\n", r.t);
     camera->update_lightField(r.u, r.v, r.s, r.t, newSpec);
-
-    // spec += newSpec;
-
-    // s1 += newSpec.illum();
-    // s2 += pow(newSpec.illum(), 2.0);
-
-    // if (samples_taken != 0 && samples_taken % samplesPerBatch == 0) {
-    //   double mean = s1 / (double) (samples_taken + 1);
-    //   double sd = sqrt( (1.0f / (double) samples_taken ) * (s2 - (s1 * s1) / (double) (samples_taken + 1)) );
-    //   double I = 1.96 * sd / sqrt((double) (samples_taken + 1));
-    //   if (I <= maxTolerance * mean) {
-    //     break;
-    //   }
-    // }
   }
-  // sampleCountBuffer[y * sampleBuffer.w + x] = samples_taken + 1;
-  // return spec / (float) (samples_taken + 1); 
-
 
   // arbitrarily set it to 16x16 microlenses/buckets in the lens
-  // for (std::map<double, std::map<double, std::pair<int, Spectrum>>>::iterator it=camera->lightField[origin.x][origin.y].begin(); it!=camera->lightField[origin.x][origin.y].end(); ++it) {
-  //   for (std::map<double, std::pair<int, Spectrum>>::iterator it2=camera->lightField[origin.x][origin.y][it->first].begin(); it2!=camera->lightField[origin.x][origin.y][it->first].end(); ++it2) {
-  //     int count = std::get<0>(camera->lightField[origin.x][origin.y][it->first][it2->first]);
-  //     Spectrum toAdd = std::get<1>(camera->lightField[origin.x][origin.y][it->first][it2->first]);
-  //     spec += toAdd / (double) count;
-  //   }
-  // }
   for (int i = 0; i < 16; i++) {
     for (int j = 0; j < 16; j++) {
-      int count = (std::get<0>(camera->lightField[origin.x][origin.y][(double) i][(double) j]));
-      Spectrum toAdd = (std::get<1>(camera->lightField[origin.x][origin.y][(double) i][(double) j]));
-      spec += toAdd / (double) count;
+      // printf("u : %f\n", origin.x);
+      // printf("v : %f\n", origin.y);
+      // printf("s : %d\n", i);
+      // printf("t : %d\n", j);
+      int count = (std::get<0>(camera->lightField[(double) i][(double) j][origin.x][origin.y]));
+      Spectrum toAdd = (std::get<1>(camera->lightField[(double) i][(double) j][origin.x][origin.y]));
+      // if (origin.x == 9 && origin.y == 4 && i == 26 && j == 2) {
+      //   printf("toAdd r: %f\n", toAdd.r);
+      //   printf("toAdd g: %f\n", toAdd.g);
+      //   printf("toAdd b: %f\n==\n", toAdd.b);
+      // }
       // printf("toAdd r: %f\n", toAdd.r);
       // printf("toAdd g: %f\n", toAdd.g);
       // printf("toAdd b: %f\n", toAdd.b);
+      spec += toAdd / (double) count;
     }
   }
   Spectrum result = spec / (256.0f);
-  // printf("spec r: %f\n", spec.r);
-  // printf("spec g: %f\n", spec.g);
-  // printf("spec b: %f\n", spec.b);
-  // printf("result r: %f\n", result.r);
-  // printf("result g: %f\n", result.g);
-  // printf("result b: %f\n", result.b);
-
   return result;
 
 

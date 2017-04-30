@@ -704,40 +704,26 @@ Spectrum PathTracer::raytrace_pixel(size_t x, size_t y) {
     r.depth = max_ray_depth;
     Spectrum newSpec = trace_ray(r, true);
 
-    // printf("r.u: %f\n", r.u);
-    // printf("r.v: %f\n", r.v);
-    // printf("r.s: %f\n", r.s);
-    // printf("r.t: %f\n", r.t);
     camera->update_lightField(r.u, r.v, r.s, r.t, newSpec);
   }
 
+  double addCount = 0.0;
   // arbitrarily set it to 16x16 microlenses/buckets in the lens
   for (int i = 0; i < 16; i++) {
     for (int j = 0; j < 16; j++) {
-      // printf("u : %f\n", origin.x);
-      // printf("v : %f\n", origin.y);
-      // printf("s : %d\n", i);
-      // printf("t : %d\n", j);
       if (camera->lightField.find(i) == camera->lightField.end() || camera->lightField[i].find(j) == camera->lightField[i].end() || camera->lightField[i][j].find(origin.x) == camera->lightField[i][j].end() || camera->lightField[i][j][origin.x].find(origin.y) == camera->lightField[i][j][origin.x].end()) {
         continue;
       }
       int count = (std::get<0>(camera->lightField[(double) i][(double) j][origin.x][origin.y]));
       Spectrum toAdd = (std::get<1>(camera->lightField[(double) i][(double) j][origin.x][origin.y]));
-      // if (origin.x == 9 && origin.y == 4 && i == 26 && j == 2) {
-      //   printf("toAdd r: %f\n", toAdd.r);
-      //   printf("toAdd g: %f\n", toAdd.g);
-      //   printf("toAdd b: %f\n==\n", toAdd.b);
-      // }
-      // printf("toAdd r: %f\n", toAdd.r);
-      // printf("toAdd g: %f\n", toAdd.g);
-      // printf("toAdd b: %f\n", toAdd.b);
       spec += toAdd / ((double) count);
+      addCount += 1.0;
     }
   }
-  Spectrum result = spec / (256.0f);
-  // printf("The result r: %f\n", result.r);
-  // printf("The result g: %f\n", result.g);
-  // printf("The result b: %f\n", result.b);
+  Spectrum result = spec;
+  if (addCount != 0) {
+    result /= addCount;
+  }
   return result;
 
 

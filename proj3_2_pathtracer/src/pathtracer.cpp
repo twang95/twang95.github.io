@@ -718,6 +718,9 @@ Spectrum PathTracer::raytrace_pixel(size_t x, size_t y) {
       // printf("v : %f\n", origin.y);
       // printf("s : %d\n", i);
       // printf("t : %d\n", j);
+      if (camera->lightField.find(i) == camera->lightField.end() || camera->lightField[i].find(j) == camera->lightField[i].end() || camera->lightField[i][j].find(origin.x) == camera->lightField[i][j].end() || camera->lightField[i][j][origin.x].find(origin.y) == camera->lightField[i][j][origin.x].end()) {
+        continue;
+      }
       int count = (std::get<0>(camera->lightField[(double) i][(double) j][origin.x][origin.y]));
       Spectrum toAdd = (std::get<1>(camera->lightField[(double) i][(double) j][origin.x][origin.y]));
       // if (origin.x == 9 && origin.y == 4 && i == 26 && j == 2) {
@@ -728,10 +731,13 @@ Spectrum PathTracer::raytrace_pixel(size_t x, size_t y) {
       // printf("toAdd r: %f\n", toAdd.r);
       // printf("toAdd g: %f\n", toAdd.g);
       // printf("toAdd b: %f\n", toAdd.b);
-      spec += toAdd / (double) count;
+      spec += toAdd / ((double) count);
     }
   }
   Spectrum result = spec / (256.0f);
+  // printf("The result r: %f\n", result.r);
+  // printf("The result g: %f\n", result.g);
+  // printf("The result b: %f\n", result.b);
   return result;
 
 

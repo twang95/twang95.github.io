@@ -124,7 +124,6 @@ int main( int argc, char** argv ) {
         optind++;
         break;
     default:
-        printf("wat\n");
         usage(argv[0]);
         return 1;
     }

@@ -196,6 +196,12 @@ class PathTracer {
   void raytrace_tile(int tile_x, int tile_y, int tile_w, int tile_h);
 
   /**
+   * Find the spectrum value of a pixel by fixing the pixel value and 
+   * averaging all values that converge on that pixel in the lightField.
+   */
+  Spectrum find_pixel_spectrum_from_lightField(double x, double y);
+
+  /**
    * Implementation of a ray tracer worker thread
    */
   void worker_thread();

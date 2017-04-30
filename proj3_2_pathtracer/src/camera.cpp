@@ -253,56 +253,18 @@ void Camera::update_lightField(double u, double v, double s, double t, Spectrum 
           // it exists
           lightField[u][v][s][t] = std::pair<int, Spectrum> (std::get<0>(lightField[u][v][s][t]) + 1, std::get<1>(lightField[u][v][s][t]) + spec);
         } else {
-          // printf("===\nadded!\n");
-          // printf("spec r: %f\n", spec.r);
-          // printf("spec g: %f\n", spec.g);
-          // printf("spec b: %f\n", spec.b);
-
-          // printf("u: %f\n", u);
-          // printf("v: %f\n", v);
-          // printf("s: %f\n", s);
-          // printf("t: %f\n", t);
           lightField[u][v][s][t] = std::pair<int, Spectrum> (1, spec);
         }
       } 
       else {
-        // printf("===\nadded!\n");
-        // printf("spec r: %f\n", spec.r);
-        // printf("spec g: %f\n", spec.g);
-        // printf("spec b: %f\n", spec.b);
-
-        // printf("u: %f\n", u);
-        // printf("v: %f\n", v);
-        // printf("s: %f\n", s);
-        // printf("t: %f\n", t);
         lightField[u][v][s][t] = std::pair<int, Spectrum> (1, spec);
       }
     } else {
-      // printf("===\nadded!\n");
-      // printf("spec r: %f\n", spec.r);
-      // printf("spec g: %f\n", spec.g);
-      // printf("spec b: %f\n", spec.b);
-
-      // printf("u: %f\n", u);
-      // printf("v: %f\n", v);
-      // printf("s: %f\n", s);
-      // printf("t: %f\n", t);
       lightField[u][v][s][t] = std::pair<int, Spectrum> (1, spec);
     }
   } else {
-    // printf("===\nadded!\n");
-    // printf("spec r: %f\n", spec.r);
-    // printf("spec g: %f\n", spec.g);
-    // printf("spec b: %f\n", spec.b);
-
-    // printf("u: %f\n", u);
-    // printf("v: %f\n", v);
-    // printf("s: %f\n", s);
-    // printf("t: %f\n", t);
     lightField[u][v][s][t] = std::pair<int, Spectrum> (1, spec);
   }
-
-
 }
 
 } // namespace CGL

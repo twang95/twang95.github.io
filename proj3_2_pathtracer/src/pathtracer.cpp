@@ -684,7 +684,6 @@ Spectrum PathTracer::raytrace_pixel(size_t x, size_t y) {
 
   int num_samples = ns_aa; // total samples to evaluate
   Vector2D origin = Vector2D((double) x, (double) y); // bottom left corner of the pixel
-  Spectrum spec = Spectrum();
 
   double s1 = 0.0f;
   double s2 = 0.0f;
@@ -707,26 +706,7 @@ Spectrum PathTracer::raytrace_pixel(size_t x, size_t y) {
     camera->update_lightField(r.u, r.v, r.s, r.t, newSpec);
   }
 
-  double addCount = 0.0;
-  // arbitrarily set it to 16x16 microlenses/buckets in the lens
-  for (int i = 0; i < 16; i++) {
-    for (int j = 0; j < 16; j++) {
-      if (camera->lightField.find(i) == camera->lightField.end() || camera->lightField[i].find(j) == camera->lightField[i].end() || camera->lightField[i][j].find(origin.x) == camera->lightField[i][j].end() || camera->lightField[i][j][origin.x].find(origin.y) == camera->lightField[i][j][origin.x].end()) {
-        continue;
-      }
-      int count = (std::get<0>(camera->lightField[(double) i][(double) j][origin.x][origin.y]));
-      Spectrum toAdd = (std::get<1>(camera->lightField[(double) i][(double) j][origin.x][origin.y]));
-      spec += toAdd / ((double) count);
-      addCount += 1.0;
-    }
-  }
-  Spectrum result = spec;
-  if (addCount != 0) {
-    result /= addCount;
-  }
-  return result;
-
-
+  return find_pixel_spectrum_from_lightField(origin.x, origin.y);
 }
 
 void PathTracer::raytrace_tile(int tile_x, int tile_y,
@@ -789,6 +769,30 @@ void PathTracer::raytrace_cell(ImageBuffer& buffer, bool silence) {
   }
 
 }
+
+Spectrum PathTracer::find_pixel_spectrum_from_lightField(double x, double y) {
+  Spectrum spec = Spectrum();
+  double addCount = 0.0;
+  // arbitrarily set it to 16x16 microlenses/buckets in the lens
+  for (int i = 0; i < 16; i++) {
+    for (int j = 0; j < 16; j++) {
+      if (camera->lightField.find(i) == camera->lightField.end() || camera->lightField[i].find(j) == camera->lightField[i].end() || camera->lightField[i][j].find(x) == camera->lightField[i][j].end() || camera->lightField[i][j][x].find(y) == camera->lightField[i][j][x].end()) {
+        continue;
+      }
+      int count = (std::get<0>(camera->lightField[(double) i][(double) j][x][y]));
+      Spectrum toAdd = (std::get<1>(camera->lightField[(double) i][(double) j][x][y]));
+      spec += toAdd / ((double) count);
+      addCount += 1.0;
+    }
+  }
+  Spectrum result = spec;
+  if (addCount != 0) {
+    result /= addCount;
+  }
+  return result;
+}
+
+
 
 void PathTracer::worker_thread() {
 

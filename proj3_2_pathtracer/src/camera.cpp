@@ -270,14 +270,12 @@ void Camera::update_lightField(double u, double v, double s, double t, Spectrum 
 
 void Camera::refocused_lightField(double newFocalDistance, double bufferWidth, double bufferHeight) {
   std::map<double, std::map<double, std::map<double, std::map<double, std::pair<int, Spectrum>>>>> newLightField;
-  // Vector3D direction(0, 0, 1);
-  // Vector3D origin(0, 0, 0);
   Vector3D destination;
   // i is u, j is v, y is t, x is s
   for (double i = 0.0; i < num_microlenses_wide; i++) {
     for (double j = 0.0; j < num_microlenses_wide; j++) {
-      for (double y = 0.0; y < bufferHeight; y++) {
-        for (double x = 0.0; x < bufferWidth; x++) {
+      for (double x = 0.0; x < bufferWidth; x++) {
+        for (double y = 0.0; y < bufferHeight; y++) {
           if (lightField.find(i) == lightField.end() || lightField[i].find(j) == lightField[i].end() || lightField[i][j].find(x) == lightField[i][j].end() || lightField[i][j][x].find(y) == lightField[i][j][x].end()) {
             continue;
           }
@@ -297,10 +295,6 @@ void Camera::refocused_lightField(double newFocalDistance, double bufferWidth, d
 
           Vector3D pSensor = Vector3D(newX, newY, 1.0);
 
-          // direction.x = x - i;
-          // direction.y = y - j;
-          // origin.x = i;
-          // origin.y = j;
           Vector3D r_o = pLens;
           Vector3D r_d = pSensor - pLens;
 
@@ -310,19 +304,19 @@ void Camera::refocused_lightField(double newFocalDistance, double bufferWidth, d
           // need to convert destination coordinates back
 
           double revertedX = trunc(((destination.x - bottomLeft.x) * bufferWidth) / (topRight.x - bottomLeft.x));
-          double revertedY = trunc(((destination.y - bottomLeft.y) * bufferWidth) / (topRight.y - bottomLeft.y));
+          double revertedY = trunc(((destination.y - bottomLeft.y) * bufferHeight) / (topRight.y - bottomLeft.y));
 
           if (revertedX >= bufferWidth || revertedX < 0 || revertedY >= bufferHeight || revertedY < 0) {
             continue;
           }
-
           newLightField[i][j][revertedX][revertedY] = lightField[i][j][x][y];
         }
       }
     }
   }
-  printf("Rerendered light field!\n");
-  lightField = newLightField;
+
+  lightField = newLightField; 
+  printf("recreated light field!\n");
 }
 
 } // namespace CGL

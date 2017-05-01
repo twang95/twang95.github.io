@@ -69,7 +69,8 @@ class PathTracer {
              HDRImageBuffer* envmap = NULL,
              string filename = "",
              double lensRadius = 0.25,
-             double focalDistance = 4.7);
+             double focalDistance = 4.7,
+             double num_microlenses_wide = 16.0);
 
   /**
    * Destructor.
@@ -290,7 +291,7 @@ class PathTracer {
 
   std::string filename;
 
-  double lensRadius, focalDistance;
+  double lensRadius, focalDistance, num_microlenses_wide;
 
 };
 

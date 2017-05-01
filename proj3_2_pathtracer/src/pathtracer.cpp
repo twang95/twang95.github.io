@@ -46,6 +46,7 @@ PathTracer::PathTracer(size_t ns_aa,
   this->maxTolerance = max_tolerance;
   this->lensRadius = lensRadius;
   this->focalDistance = focalDistance;
+  this->num_microlenses_wide = num_microlenses_wide;
 
   this->filename = filename;
 
@@ -117,6 +118,7 @@ void PathTracer::set_camera(Camera *camera) {
 
   this->camera->lensRadius = lensRadius;
   this->camera->focalDistance = focalDistance;
+  this->camera->num_microlenses_wide = num_microlenses_wide;
   
   if (has_valid_configuration()) {
     state = READY;
@@ -774,8 +776,8 @@ Spectrum PathTracer::find_pixel_spectrum_from_lightField(double x, double y) {
   Spectrum spec = Spectrum();
   double addCount = 0.0;
   // arbitrarily set it to 16x16 microlenses/buckets in the lens
-  for (int i = 0; i < 16; i++) {
-    for (int j = 0; j < 16; j++) {
+  for (int i = 0; i < num_microlenses_wide; i++) {
+    for (int j = 0; j < num_microlenses_wide; j++) {
       if (camera->lightField.find(i) == camera->lightField.end() || camera->lightField[i].find(j) == camera->lightField[i].end() || camera->lightField[i][j].find(x) == camera->lightField[i][j].end() || camera->lightField[i][j][x].find(y) == camera->lightField[i][j][x].end()) {
         continue;
       }

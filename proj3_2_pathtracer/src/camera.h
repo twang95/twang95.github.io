@@ -94,11 +94,13 @@ class Camera {
   // Lens aperture and focal distance for depth of field effects.
   double lensRadius;
   double focalDistance;
+  double num_microlenses_wide;
 
   // light field
   std::map<double, std::map<double, std::map<double, std::map<double, std::pair<int, Spectrum>>>>> lightField;
 
   void update_lightField(double u, double v, double s, double t, Spectrum spec);
+  std::map<double, std::map<double, std::map<double, std::map<double, std::pair<int, Spectrum>>>>> refocused_lightField(double newFocalDistance);
 
  private:
   // Computes pos, screenXDir, screenYDir from target, r, phi, theta.

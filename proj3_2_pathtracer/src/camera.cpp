@@ -216,17 +216,14 @@ Ray Camera::generate_ray_for_microlens(double x, double y, double originX, doubl
   double s = originX;
   double t = originY;
 
-  // hard setting this right now to be 16 x 16, for 256 total microlenses
-  double num_microlenses = 16.0;
-
   Vector3D r_d = Vector3D(newX, newY, -1);
 
   Vector3D pLens = Vector3D(lensRadius * sqrt(rndR) * cos(2.0 * PI * rndTheta), lensRadius * sqrt(rndR) * sin(2.0 * PI * rndTheta), 0.0);
   Vector3D pFocus = r_d * (focalDistance);
 
   // bucket of the lens (or the microlens location)
-  double u = (num_microlenses * (pLens.x + lensRadius) - fmod(num_microlenses * (pLens.x + lensRadius), lensRadius * 2.0)) / (lensRadius * 2.0);
-  double v = (num_microlenses * (pLens.y + lensRadius) - fmod(num_microlenses * (pLens.y + lensRadius), lensRadius * 2.0)) / (lensRadius * 2.0);
+  double u = (num_microlenses_wide * (pLens.x + lensRadius) - fmod(num_microlenses_wide * (pLens.x + lensRadius), lensRadius * 2.0)) / (lensRadius * 2.0);
+  double v = (num_microlenses_wide * (pLens.y + lensRadius) - fmod(num_microlenses_wide * (pLens.y + lensRadius), lensRadius * 2.0)) / (lensRadius * 2.0);
 
   pLens = c2w * pLens;
   Vector3D dir = (pFocus - pLens).unit();
@@ -243,6 +240,10 @@ Ray Camera::generate_ray_for_microlens(double x, double y, double originX, doubl
 
   return r;
 }
+
+//
+// WE WILL NEED TO MAKE SURE THAT THE NUM_MICROLENSES_WIDE CAN BE SET FROM THE COMMAND LINE
+//
 
 void Camera::update_lightField(double u, double v, double s, double t, Spectrum spec) {
   // See if lightField(u, v, s, t) exists
@@ -267,4 +268,54 @@ void Camera::update_lightField(double u, double v, double s, double t, Spectrum 
   }
 }
 
+std::map<double, std::map<double, std::map<double, std::map<double, std::pair<int, Spectrum>>>>> Camera::refocused_lightField(double newFocalDistance) {
+  std::map<double, std::map<double, std::map<double, std::map<double, std::pair<int, Spectrum>>>>> newLightField;
+  Vector3D direction(0, 0, 1);
+  Vector3D origin(0, 0, 0);
+  Vector3D destination;
+  // i is u, j is v, y is t, x is s
+  for (double i = 0.0; i < num_microlenses_wide; i++) {
+    for (double j = 0.0; j < num_microlenses_wide; j++) {
+      for (double y = 0.0; y < sampleBuffer.h; y++) {
+        for (double x = 0.0; x < sampleBuffer.w; x++) {
+          if (lightField.find(i) == lightField.end() || lightField[i].find(j) == lightField[i].end() || lightField[i][j].find(x) == lightField[i][j].end() || lightField[i][j][x].find(y) == lightField[i][j][x].end()) {
+            continue;
+          }
+          direction.x = x - i;
+          direction.y = t - j;
+          origin.x = i;
+          origin.y = j;
+          Ray r = Ray(origin, direction);
+          destination = r.o + newFocalDistance * r.d;
+          newLightField[i][j][destination.x][destination.y] = lightField[i][j][x][y];
+        }
+      }
+    }
+  }
+  lightField = newLightField;
+  return lightField;
+}
+
 } // namespace CGL
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

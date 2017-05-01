@@ -133,6 +133,8 @@ class PathTracer {
    */
   void start_raytracing();
 
+  void rerender_with_new_focus(double dist);
+
   void render_to_file(std::string filename, size_t x, size_t y, size_t dx, size_t dy);
 
   void raytrace_cell(ImageBuffer& buffer, bool silence = true);
@@ -195,6 +197,7 @@ class PathTracer {
    * in a worker thread.
    */
   void raytrace_tile(int tile_x, int tile_y, int tile_w, int tile_h);
+  void raytrace_tile_focus(int tile_x, int tile_y, int tile_w, int tile_h);
 
   /**
    * Find the spectrum value of a pixel by fixing the pixel value and 
@@ -202,11 +205,12 @@ class PathTracer {
    */
   Spectrum find_pixel_spectrum_from_lightField(double x, double y);
 
+
   /**
    * Implementation of a ray tracer worker thread
    */
   void worker_thread();
-
+  void worker_thread_focus();
   /**
    * Log a ray miss.
    */

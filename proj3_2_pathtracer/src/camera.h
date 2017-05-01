@@ -91,6 +91,11 @@ class Camera {
   Ray generate_ray_for_thin_lens(double x, double y, double rndR, double rndTheta) const;
   Ray generate_ray_for_microlens(double x, double y, double originX, double originY, double rndR, double rndTheta)  const;
 
+  /* 
+   * Method to refocus the camera by pushing back the sensor by newFocalDistance
+   */
+  void refocused_lightField(double newFocalDistance, double bufferWidth, double bufferHeight);
+
   // Lens aperture and focal distance for depth of field effects.
   double lensRadius;
   double focalDistance;
@@ -100,7 +105,6 @@ class Camera {
   std::map<double, std::map<double, std::map<double, std::map<double, std::pair<int, Spectrum>>>>> lightField;
 
   void update_lightField(double u, double v, double s, double t, Spectrum spec);
-  std::map<double, std::map<double, std::map<double, std::map<double, std::pair<int, Spectrum>>>>> refocused_lightField(double newFocalDistance);
 
  private:
   // Computes pos, screenXDir, screenYDir from target, r, phi, theta.

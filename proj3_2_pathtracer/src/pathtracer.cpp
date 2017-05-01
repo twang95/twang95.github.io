@@ -34,7 +34,8 @@ PathTracer::PathTracer(size_t ns_aa,
                        HDRImageBuffer* envmap,
                        string filename,
                        double lensRadius,
-                       double focalDistance) {
+                       double focalDistance,
+                       double num_microlenses_wide) {
   state = INIT,
   this->ns_aa = ns_aa;
   this->max_ray_depth = max_ray_depth;
@@ -265,6 +266,63 @@ void PathTracer::start_raytracing() {
   if (!render_silent)  fprintf(stdout, "[PathTracer] Rendering... "); fflush(stdout);
   for (int i=0; i<numWorkerThreads; i++) {
       workerThreads[i] = new std::thread(&PathTracer::worker_thread, this);
+  }
+}
+
+void PathTracer::rerender_with_new_focus(double dist) {
+  if (state != READY) return;
+
+  rayLog.clear();
+  workQueue.clear();
+
+  state = RENDERING;
+  continueRaytracing = true;
+  workerDoneCount = 0;
+
+  sampleBuffer.clear();
+  if (!render_cell) {
+    frameBuffer.clear();
+    num_tiles_w = sampleBuffer.w / imageTileSize + 1;
+    num_tiles_h = sampleBuffer.h / imageTileSize + 1;
+    tilesTotal = num_tiles_w * num_tiles_h;
+    tilesDone = 0;
+    tile_samples.resize(num_tiles_w * num_tiles_h);
+    memset(&tile_samples[0], 0, num_tiles_w * num_tiles_h * sizeof(int));
+
+    // populate the tile work queue
+    for (size_t y = 0; y < sampleBuffer.h; y += imageTileSize) {
+        for (size_t x = 0; x < sampleBuffer.w; x += imageTileSize) {
+            workQueue.put_work(WorkItem(x, y, imageTileSize, imageTileSize));
+        }
+    }
+  } else {
+    int w = (cell_br-cell_tl).x;
+    int h = (cell_br-cell_tl).y;
+    int imTS = imageTileSize / 4;
+    num_tiles_w = w / imTS + 1;
+    num_tiles_h = h / imTS + 1;
+    tilesTotal = num_tiles_w * num_tiles_h;
+    tilesDone = 0;
+    tile_samples.resize(num_tiles_w * num_tiles_h);
+    memset(&tile_samples[0], 0, num_tiles_w * num_tiles_h * sizeof(int));
+
+    // populate the tile work queue
+    for (size_t y = cell_tl.y; y < cell_br.y; y += imTS) {
+        for (size_t x = cell_tl.x; x < cell_br.x; x += imTS) {
+            workQueue.put_work(WorkItem(x, y, 
+              min(imTS, (int)(cell_br.x-x)), min(imTS, (int)(cell_br.y-y)) ));
+        }
+    }
+  }
+
+  printf("starting light field refocusing\n");
+  camera->refocused_lightField(dist, sampleBuffer.w, sampleBuffer.h);
+
+  bvh->total_isects = 0; bvh->total_rays = 0;
+  // launch threads
+  if (!render_silent)  fprintf(stdout, "[PathTracer] Rendering... "); fflush(stdout);
+  for (int i=0; i<numWorkerThreads; i++) {
+      workerThreads[i] = new std::thread(&PathTracer::worker_thread_focus, this);
   }
 }
 
@@ -706,6 +764,18 @@ Spectrum PathTracer::raytrace_pixel(size_t x, size_t y) {
     Spectrum newSpec = trace_ray(r, true);
 
     camera->update_lightField(r.u, r.v, r.s, r.t, newSpec);
+
+    s1 += newSpec.illum();
+    s2 += pow(newSpec.illum(), 2.0);
+
+    if (samples_taken != 0 && samples_taken % samplesPerBatch == 0) {
+      double mean = s1 / (double) (samples_taken + 1);
+      double sd = sqrt( (1.0f / (double) samples_taken ) * (s2 - (s1 * s1) / (double) (samples_taken + 1)) );
+      double I = 1.96 * sd / sqrt((double) (samples_taken + 1));
+      if (I <= maxTolerance * mean) {
+        break;
+      }
+    }
   }
 
   return find_pixel_spectrum_from_lightField(origin.x, origin.y);
@@ -731,6 +801,34 @@ void PathTracer::raytrace_tile(int tile_x, int tile_y,
     if (!continueRaytracing) return;
     for (size_t x = tile_start_x; x < tile_end_x; x++) {
         Spectrum s = raytrace_pixel(x, y);
+        sampleBuffer.update_pixel(s, x, y);
+    }
+  }
+
+  tile_samples[tile_idx_x + tile_idx_y * num_tiles_w] += 1;
+  sampleBuffer.toColor(frameBuffer, tile_start_x, tile_start_y, tile_end_x, tile_end_y);
+}
+
+void PathTracer::raytrace_tile_focus(int tile_x, int tile_y,
+                               int tile_w, int tile_h) {
+
+  size_t w = sampleBuffer.w;
+  size_t h = sampleBuffer.h;
+
+  size_t tile_start_x = tile_x;
+  size_t tile_start_y = tile_y;
+
+  size_t tile_end_x = std::min(tile_start_x + tile_w, w);
+  size_t tile_end_y = std::min(tile_start_y + tile_h, h);
+
+  size_t tile_idx_x = tile_x / imageTileSize;
+  size_t tile_idx_y = tile_y / imageTileSize;
+  size_t num_samples_tile = tile_samples[tile_idx_x + tile_idx_y * num_tiles_w];
+
+  for (size_t y = tile_start_y; y < tile_end_y; y++) {
+    if (!continueRaytracing) return;
+    for (size_t x = tile_start_x; x < tile_end_x; x++) {
+        Spectrum s = find_pixel_spectrum_from_lightField((double) x, (double) y);
         sampleBuffer.update_pixel(s, x, y);
     }
   }
@@ -795,7 +893,6 @@ Spectrum PathTracer::find_pixel_spectrum_from_lightField(double x, double y) {
 }
 
 
-
 void PathTracer::worker_thread() {
 
   Timer timer;
@@ -830,6 +927,42 @@ void PathTracer::worker_thread() {
     cv_done.notify_one();
   }
 }
+
+void PathTracer::worker_thread_focus() {
+
+  Timer timer;
+  timer.start();
+
+  WorkItem work;
+  while (continueRaytracing && workQueue.try_get_work(&work)) {
+    raytrace_tile(work.tile_x, work.tile_y, work.tile_w, work.tile_h);
+    { 
+      lock_guard<std::mutex> lk(m_done);
+      ++tilesDone;
+      if (!render_silent)  cout << "\r[PathTracer] Rendering... " << int((double)tilesDone/tilesTotal * 100) << '%';
+      cout.flush();
+    }
+  }
+
+  workerDoneCount++;
+  if (!continueRaytracing && workerDoneCount == numWorkerThreads) {
+    timer.stop();
+    if (!render_silent)  fprintf(stdout, "\n[PathTracer] Rendering canceled!\n");
+    state = READY;
+  }
+
+  if (continueRaytracing && workerDoneCount == numWorkerThreads) {
+    timer.stop();
+    if (!render_silent)  fprintf(stdout, "\r[PathTracer] Rendering... 100%%! (%.4fs)\n", timer.duration());
+    if (!render_silent)  fprintf(stdout, "[PathTracer] BVH traced %llu rays.\n", bvh->total_rays);
+    if (!render_silent)  fprintf(stdout, "[PathTracer] Averaged %f intersection tests per ray.\n", (((double)bvh->total_isects)/bvh->total_rays));
+
+    lock_guard<std::mutex> lk(m_done);
+    state = DONE;
+    cv_done.notify_one();
+  }
+}
+
 
 void PathTracer::save_image(string filename, ImageBuffer* buffer) {
 

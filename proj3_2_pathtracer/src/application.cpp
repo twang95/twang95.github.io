@@ -447,7 +447,12 @@ void Application::keyboard_event(int key, int event, unsigned char mods) {
             pathtracer->stop();
             pathtracer->start_raytracing();
             break;
-
+        case 'm': case 'M':
+            pathtracer->stop();
+            pathtracer->rerender_with_new_focus(2.0);
+            break;
+          case 'n': case 'N':
+            break;
         case 'd': case 'D':
           camera.dump_settings(filename + "_cam_settings.txt");
           break;

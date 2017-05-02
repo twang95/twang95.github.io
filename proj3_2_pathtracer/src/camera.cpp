@@ -314,7 +314,7 @@ void Camera::refocused_lightField(double newFocalDistance, double bufferWidth, d
       }
     }
   }
-
+  lightField = std::map<double, std::map<double, std::map<double, std::map<double, std::pair<int, Spectrum>>>>>();
   lightField = newLightField; 
   printf("recreated light field!\n");
 }

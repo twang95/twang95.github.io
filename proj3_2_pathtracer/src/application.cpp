@@ -451,8 +451,28 @@ void Application::keyboard_event(int key, int event, unsigned char mods) {
             pathtracer->stop();
             pathtracer->rerender_with_new_focus(2.0);
             break;
-          case 'n': case 'N':
-            break;
+        case 'n': case 'N':
+          break;
+        case 't': case 'T':
+          pathtracer->stop();
+          pathtracer->render_single_bucket(2.0f, 2.0f);
+          mode = RENDER_MODE;
+          break;
+        case 'a': case 'A':
+          pathtracer->stop();
+          pathtracer->render_single_bucket(10.0f, 10.0f);
+          mode = RENDER_MODE;
+          break;
+        case 'p': case 'P':
+          pathtracer->stop();
+          pathtracer->render_single_bucket(2.0f, 10.0f);
+          mode = RENDER_MODE;
+          break;
+        case 'q': case 'Q':
+          pathtracer->stop();
+          pathtracer->render_single_bucket(10.0f, 2.0f);
+          mode = RENDER_MODE;
+          break;
         case 'd': case 'D':
           camera.dump_settings(filename + "_cam_settings.txt");
           break;

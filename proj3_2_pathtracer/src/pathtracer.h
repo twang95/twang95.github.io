@@ -133,7 +133,7 @@ class PathTracer {
    */
   void start_raytracing();
 
-  void rerender_with_new_focus(double dist);
+  void rerender_with_new_focus(double alpha);
 
   void render_single_bucket(double u, double v);
 
@@ -199,8 +199,10 @@ class PathTracer {
    * in a worker thread.
    */
   void raytrace_tile(int tile_x, int tile_y, int tile_w, int tile_h);
-  void raytrace_tile_focus(int tile_x, int tile_y, int tile_w, int tile_h);
+  void raytrace_tile_focus(int tile_x, int tile_y, int tile_w, int tile_h, std::map<double, std::map<double, std::pair<int, Spectrum>>> newBuffer);
   void raytrace_tile_single_bucket(int tile_x, int tile_y, int tile_w, int tile_h, double u, double v);
+  void raytrace_tile_disk(int tile_x, int tile_y, int tile_w, int tile_h, double u, double v);
+  std::map<double, std::map<double, std::pair<int, Spectrum>>> shift_and_add(double alpha);
 
   /**
    * Find the spectrum value of a pixel by fixing the pixel value and 
@@ -208,13 +210,15 @@ class PathTracer {
    */
   Spectrum find_pixel_spectrum_from_lightField(double x, double y);
   Spectrum find_single_bucket_spectrum(double x, double y, double u, double v);
+  Spectrum find_microlens_value(double x, double y);
 
   /**
    * Implementation of a ray tracer worker thread
    */
   void worker_thread();
-  void worker_thread_focus();
+  void worker_thread_focus(std::map<double, std::map<double, std::pair<int, Spectrum>>> newBuffer);
   void worker_thread_single_bucket(double u, double v);
+  void worker_thread_disk(double u, double v);
   /**
    * Log a ray miss.
    */

@@ -222,8 +222,8 @@ Ray Camera::generate_ray_for_microlens(double x, double y, double originX, doubl
   Vector3D pFocus = r_d * (focalDistance);
 
   // bucket of the lens (or the microlens location)
-  double u = (num_microlenses_wide * (pLens.x + lensRadius) - fmod(num_microlenses_wide * (pLens.x + lensRadius), lensRadius * 2.0)) / (lensRadius * 2.0);
-  double v = (num_microlenses_wide * (pLens.y + lensRadius) - fmod(num_microlenses_wide * (pLens.y + lensRadius), lensRadius * 2.0)) / (lensRadius * 2.0);
+  double u = round((num_microlenses_wide * (pLens.x + lensRadius) - fmod(num_microlenses_wide * (pLens.x + lensRadius), lensRadius * 2.0)) / (lensRadius * 2.0));
+  double v = round((num_microlenses_wide * (pLens.y + lensRadius) - fmod(num_microlenses_wide * (pLens.y + lensRadius), lensRadius * 2.0)) / (lensRadius * 2.0));
 
   pLens = c2w * pLens;
   Vector3D dir = (pFocus - pLens).unit();

@@ -449,7 +449,7 @@ void Application::keyboard_event(int key, int event, unsigned char mods) {
             break;
         case 'm': case 'M':
             pathtracer->stop();
-            pathtracer->rerender_with_new_focus(2.0);
+            pathtracer->rerender_with_new_focus(-0.75);
             break;
         case 'n': case 'N':
           break;

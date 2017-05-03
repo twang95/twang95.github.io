@@ -269,7 +269,7 @@ void PathTracer::start_raytracing() {
   }
 }
 
-void PathTracer::rerender_with_new_focus(double dist) {
+void PathTracer::rerender_with_new_focus(double alpha) {
   if (state != READY) return;
 
   rayLog.clear();
@@ -315,14 +315,15 @@ void PathTracer::rerender_with_new_focus(double dist) {
     }
   }
 
-  printf("starting light field refocusing\n");
-  camera->refocused_lightField(dist, sampleBuffer.w, sampleBuffer.h);
+  printf("Doing shift and add\n");
+  // camera->refocused_lightField(dist, sampleBuffer.w, sampleBuffer.h);
+  std::map<double, std::map<double, std::pair<int, Spectrum>>> newBuffer = shift_and_add(alpha);
 
   bvh->total_isects = 0; bvh->total_rays = 0;
   // launch threads
   if (!render_silent)  fprintf(stdout, "[PathTracer] Rendering... "); fflush(stdout);
   for (int i=0; i<numWorkerThreads; i++) {
-      workerThreads[i] = new std::thread(&PathTracer::worker_thread_focus, this);
+      workerThreads[i] = new std::thread(&PathTracer::worker_thread_focus, this, newBuffer);
   }
 }
 
@@ -835,6 +836,50 @@ Spectrum PathTracer::raytrace_pixel(size_t x, size_t y) {
   return find_pixel_spectrum_from_lightField(origin.x, origin.y);
 }
 
+std::map<double, std::map<double, std::pair<int, Spectrum>>> PathTracer::shift_and_add(double alpha) {
+  std::map<double, std::map<double, std::pair<int, Spectrum>>> newBuffer = map<double, map<double, std::pair<int, Spectrum>>>();
+
+  // 7.5 for 16. This way, (0,0) will be in the middle of every image
+  double amountToShift = (num_microlenses_wide - 1.0) / 2.0;
+
+  // (i, j) = (u, v); (x, y) = (s, t)
+  for (double i = 0; i < (double) num_microlenses_wide; i++) {
+    for (double j = 0; j < (double) num_microlenses_wide; j++) {
+      // Need to calculate the spectrum for every image
+      double uPrime = i - amountToShift;
+      double vPrime = j - amountToShift;
+
+      for (double y = 0; y < (double) sampleBuffer.h; y++) {
+        for (double x = 0; x < (double) sampleBuffer.w; x++) {
+          double newXCoord = round(x - alpha * uPrime);
+          double newYCoord = round(y - alpha * vPrime);
+          // Check to see if the new coordinate is outside of the buffer plane
+          if (newXCoord < 0 || newXCoord >= sampleBuffer.w || newYCoord < 0 || newYCoord >= sampleBuffer.h) {
+            continue;
+          }
+          if (camera->lightField.find(i) == camera->lightField.end() || camera->lightField[i].find(j) == camera->lightField[i].end() || camera->lightField[i][j].find(x) == camera->lightField[i][j].end() || camera->lightField[i][j][x].find(y) == camera->lightField[i][j][x].end()) {
+            continue;
+          }
+          Spectrum toAdd = (std::get<1>(camera->lightField[i][j][x][y]));
+          // Check to see if the Spectrum already exists and add it to the map
+          // appropriately
+          if (newBuffer.find(newXCoord) != newBuffer.end()) {
+            if (newBuffer[newXCoord].find(newYCoord) != newBuffer[newXCoord].end()) {
+              // it exists
+              newBuffer[newXCoord][newYCoord] = std::pair<int, Spectrum> (std::get<0>(newBuffer[newXCoord][newYCoord]) + 1, std::get<1>(newBuffer[newXCoord][newYCoord]) + toAdd);
+            } else {
+              newBuffer[newXCoord][newYCoord] = std::pair<int, Spectrum> (1, toAdd);
+            }
+          } else {
+            newBuffer[newXCoord][newYCoord] = std::pair<int, Spectrum> (1, toAdd);
+          }
+        }
+      }
+    }
+  }
+  return newBuffer;
+}
+
 void PathTracer::raytrace_tile(int tile_x, int tile_y,
                                int tile_w, int tile_h) {
 
@@ -864,7 +909,7 @@ void PathTracer::raytrace_tile(int tile_x, int tile_y,
 }
 
 void PathTracer::raytrace_tile_focus(int tile_x, int tile_y,
-                               int tile_w, int tile_h) {
+                               int tile_w, int tile_h, std::map<double, std::map<double, std::pair<int, Spectrum>>> newBuffer) {
 
   size_t w = sampleBuffer.w;
   size_t h = sampleBuffer.h;
@@ -882,14 +927,53 @@ void PathTracer::raytrace_tile_focus(int tile_x, int tile_y,
   for (size_t y = tile_start_y; y < tile_end_y; y++) {
     if (!continueRaytracing) return;
     for (size_t x = tile_start_x; x < tile_end_x; x++) {
-        Spectrum s = find_pixel_spectrum_from_lightField((double) x, (double) y);
-        sampleBuffer.update_pixel(s, x, y);
+      Spectrum s = Spectrum();
+      if (newBuffer.find(x) != newBuffer.end() && newBuffer[x].find(y) != newBuffer[x].end()) {  
+        double count = (double) std::get<0>(newBuffer[x][y]);
+        if (count > 0) {
+          s = std::get<1>(newBuffer[x][y]) / count;
+        } else {
+          s = std::get<1>(newBuffer[x][y]);
+        }
+      }
+      sampleBuffer.update_pixel(s, x, y);
     }
   }
 
   tile_samples[tile_idx_x + tile_idx_y * num_tiles_w] += 1;
   sampleBuffer.toColor(frameBuffer, tile_start_x, tile_start_y, tile_end_x, tile_end_y);
 }
+
+// void PathTracer::raytrace_tile_disk(int tile_x, int tile_y,
+//                                int tile_w, int tile_h, double u, double v) {
+
+//   size_t w = sampleBuffer.w;
+//   size_t h = sampleBuffer.h;
+
+//   size_t tile_start_x = tile_x;
+//   size_t tile_start_y = tile_y;
+
+//   size_t tile_end_x = std::min(tile_start_x + tile_w, w);
+//   size_t tile_end_y = std::min(tile_start_y + tile_h, h);
+
+//   size_t tile_idx_x = tile_x / imageTileSize;
+//   size_t tile_idx_y = tile_y / imageTileSize;
+//   size_t num_samples_tile = tile_samples[tile_idx_x + tile_idx_y * num_tiles_w];
+
+//   for (size_t y = tile_start_y; y < tile_end_y; y++) {
+//     if (!continueRaytracing) return;
+//     for (size_t x = tile_start_x; x < tile_end_x; x++) {
+//       double u = (x - fmod(x, num_microlenses_wide)) / num_microlenses_wide;
+//       double v = (y - fmod(y, num_microlenses_wide)) / num_microlenses_wide;
+
+//       Spectrum s = find_microlens_value(u, v);
+//       sampleBuffer.update_pixel(s, x, y);
+//     }
+//   }
+
+//   tile_samples[tile_idx_x + tile_idx_y * num_tiles_w] += 1;
+//   sampleBuffer.toColor(frameBuffer, tile_start_x, tile_start_y, tile_end_x, tile_end_y);
+// }
 
 void PathTracer::raytrace_tile_single_bucket(int tile_x, int tile_y,
                                int tile_w, int tile_h, double u, double v) {
@@ -910,11 +994,8 @@ void PathTracer::raytrace_tile_single_bucket(int tile_x, int tile_y,
   for (size_t y = tile_start_y; y < tile_end_y; y++) {
     if (!continueRaytracing) return;
     for (size_t x = tile_start_x; x < tile_end_x; x++) {
-        Spectrum s = Spectrum();
-        if (camera->lightField.find(u) != camera->lightField.end() && camera->lightField[u].find(v) != camera->lightField[u].end() && camera->lightField[u][v].find(x) != camera->lightField[u][v].end() && camera->lightField[u][v][x].find(y) != camera->lightField[u][v][x].end()) {
-          s = (std::get<1>(camera->lightField[u][v][x][y]));
-        }
-        sampleBuffer.update_pixel(s, x, y);
+      Spectrum s = find_single_bucket_spectrum(x, y, u, v);
+      sampleBuffer.update_pixel(s, x, y);
     }
   }
 
@@ -984,6 +1065,25 @@ Spectrum PathTracer::find_single_bucket_spectrum(double x, double y, double u, d
  return (std::get<1>(camera->lightField[u][v][x][y]));
 }
 
+// Will be used for rendering the disks. will render as much across and down as possible
+// x and y are u and v
+// Spectrum PathTracer::find_microlens_value(double x, double y) {
+//   Spectrum spec = Spectrum();
+//   double addCount = 0.0;
+//   for (int j = 0; j < sampleBuffer.h; j++) {
+//     for (int i = 0; i < sampleBuffer.w; i++) {
+//       if (camera->lightField.find(i) == camera->lightField.end() || camera->lightField[i].find(j) == camera->lightField[i].end() || camera->lightField[i][j].find(x) == camera->lightField[i][j].end() || camera->lightField[i][j][x].find(y) == camera->lightField[i][j][x].end()) {
+//         continue;
+//       }
+//       Spectrum toAdd = (std::get<1>(camera->lightField[x][y][(double) i][(double) j]));
+//       spec += toAdd;
+//       addCount += 1.0;
+//     }
+//   }
+
+//   return spec / addCount;
+// }
+
 void PathTracer::worker_thread() {
 
   Timer timer;
@@ -1019,14 +1119,14 @@ void PathTracer::worker_thread() {
   }
 }
 
-void PathTracer::worker_thread_focus() {
+void PathTracer::worker_thread_focus(std::map<double, std::map<double, std::pair<int, Spectrum>>> newBuffer) {
 
   Timer timer;
   timer.start();
 
   WorkItem work;
   while (continueRaytracing && workQueue.try_get_work(&work)) {
-    raytrace_tile(work.tile_x, work.tile_y, work.tile_w, work.tile_h);
+    raytrace_tile_focus(work.tile_x, work.tile_y, work.tile_w, work.tile_h, newBuffer);
     { 
       lock_guard<std::mutex> lk(m_done);
       ++tilesDone;
@@ -1088,6 +1188,41 @@ void PathTracer::worker_thread_single_bucket(double u, double v) {
     cv_done.notify_one();
   }
 }
+
+// void PathTracer::worker_thread_disk(double u, double v) {
+
+//   Timer timer;
+//   timer.start();
+
+//   WorkItem work;
+//   while (continueRaytracing && workQueue.try_get_work(&work)) {
+//     raytrace_tile_single_bucket(work.tile_x, work.tile_y, work.tile_w, work.tile_h, u, v);
+//     { 
+//       lock_guard<std::mutex> lk(m_done);
+//       ++tilesDone;
+//       if (!render_silent)  cout << "\r[PathTracer] Rendering... " << int((double)tilesDone/tilesTotal * 100) << '%';
+//       cout.flush();
+//     }
+//   }
+
+//   workerDoneCount++;
+//   if (!continueRaytracing && workerDoneCount == numWorkerThreads) {
+//     timer.stop();
+//     if (!render_silent)  fprintf(stdout, "\n[PathTracer] Rendering canceled!\n");
+//     state = READY;
+//   }
+
+//   if (continueRaytracing && workerDoneCount == numWorkerThreads) {
+//     timer.stop();
+//     if (!render_silent)  fprintf(stdout, "\r[PathTracer] Rendering... 100%%! (%.4fs)\n", timer.duration());
+//     if (!render_silent)  fprintf(stdout, "[PathTracer] BVH traced %llu rays.\n", bvh->total_rays);
+//     if (!render_silent)  fprintf(stdout, "[PathTracer] Averaged %f intersection tests per ray.\n", (((double)bvh->total_isects)/bvh->total_rays));
+
+//     lock_guard<std::mutex> lk(m_done);
+//     state = DONE;
+//     cv_done.notify_one();
+//   }
+// }
 
 void PathTracer::save_image(string filename, ImageBuffer* buffer) {
 

@@ -1,0 +1,97 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
+<head>
+<style>  
+    div.padded {  
+      padding-top: 0px;  
+      padding-right: 100px;  
+      padding-bottom: 0.25in;  
+      padding-left: 100px;  
+    }  
+    img, video {
+      display:block;
+      margin-left: auto;
+      margin-right: auto;
+    }
+  </style> 
+<title>Final Report</title>
+<meta http-equiv="content-type" content="text/html; charset=utf-8" />
+<link rel="stylesheet" type="text/css" href="style.css" media="screen" />
+</head>
+<body>
+<br />
+<h1 align="middle">Final Report</h1>
+
+<h2 align="middle">Abstract</h2>
+<p>
+  In this project, our goal was to create a simulation of a normal plenoptic camera. In order to do so, we extended upon project 3-2. Our general approach was to take the main lens simulation and split the main lens into different buckets (based off of coordinates). Each bucket would represent a microlens, so we would effectively have the microarray lens just by splitting up the main lens. Once that was in place, we were able to store a 4D light field of the rays coming into the sensor plane, and using those we were able to perform operations that refocused the image at different depths. 
+</p>
+
+<h2 align="middle">Technical Approach</h2>
+<p>
+  
+</p>
+
+<h2 align="middle">Results</h2>
+<p>
+  We were able to successfully capture the incoming rays as a light field using our buckets method. As a result, we were able to render images from each bucket, as if viewed from different microlenses. The differences are hard to see, but the viewpoint from each bucket is different. Also, our images are riddled with holes due to not having enough samples to fill in every pixel of every bucket, but the general idea is there. 
+</p>
+<div align="center">
+  <table style="width=100%">
+    <tr>
+      <td align="middle">
+      <img src="img/dragon_2_2.png" width="480px" />
+      <td align="middle">
+      <img src="img/dragon_2_10.png" width="480px" />
+    </tr>
+    <tr>
+      <td align="middle">
+      <img src="img/dragon_10_2.png" width="480px" />
+      <td align="middle">
+      <img src="img/dragon_10_10.png" width="480px" />
+    </tr>
+  </table>
+</div>
+<p>
+  After successfully rendering the light field, we were able to use the light field in order to render images focused at different locations, all via post processing (so from the original light field data that we gathered from the first rendering). 
+</p>
+<div align="center">
+  <table style="width=100%">
+    <tr>
+      <td align="middle">
+      <img src="img/dragon_start_focused.png" width="480px" />
+      <figcaption align="middle">Start point, the photo is focused on the dragon's tail</figcaption>
+      <td align="middle">
+      <img src="img/dragon_focused_front.png" width="480px" />
+      <figcaption align="middle">Post-rendering processing, now the photo is focused on the dragon's head</figcaption>
+    </tr>
+    <tr>
+      <td align="middle">
+      <img src="img/dragon_start_focused.png" width="480px" />
+      <figcaption align="middle">Same start as above</figcaption>
+      <td align="middle">
+      <img src="img/dragon_unfocused_behind.png" width="480px" />
+      <figcaption align="middle">Post-rendering processing, now the photo is focused far behind the dragon</figcaption>
+    </tr>
+  </table>
+</div>
+<h2 align="middle">References</h2>
+<p>
+  Papers: Light Field Photography with a Hand-Held Plenoptic Camera by Ren Ng, Marc Levoy, Mathieu Brodif, Gene Duval, Mark Horowitz, and Pat Hanrahan. 
+  </br> 
+  Special thank you to Professor Ren Ng and Ben Mildenhall for guiding us down the right path and helping us whenever we needed it. 
+</p>
+<h2 align="middle">Contributions</h2>
+<p>
+  We worked on this project together for the most part, including the programming portions. Below is how it was split up a little, but for the most part the programming was done together. 
+  </br>
+  Albert Bierley: debugged and fixed the microlens bucket code and shift and add algorithm. Also worked a lot on focus method by pushing sensor back and forth (that ended up not working). 
+  </br>
+  Tony Wang: setup of microlens buckets, and wrote initial shift and add algorithm.
+</p>
+
+</html>
+
+
+
+

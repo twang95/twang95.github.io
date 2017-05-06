@@ -274,8 +274,11 @@ void Camera::refocused_lightField(double newFocalDistance, double bufferWidth, d
   // i is u, j is v, y is t, x is s
   for (double i = 0.0; i < num_microlenses_wide; i++) {
     for (double j = 0.0; j < num_microlenses_wide; j++) {
-      for (double x = 0.0; x < bufferWidth; x++) {
-        for (double y = 0.0; y < bufferHeight; y++) {
+      for (double y = 0.0; y < bufferHeight; y++) {
+        for (double x = 0.0; x < bufferWidth; x++) {
+          // if ((i == 8 || i == 9 || i == 11 || i == 13 || i == 15) && (lightField.find(i) != lightField.end() && lightField[i].find(j) != lightField[i].end() && lightField[i][j].find(x) != lightField[i][j].end() && lightField[i][j][x].find(y) != lightField[i][j][x].end())) {
+          //   printf("i, j, x, y are %f, %f, %f, %f \n", i, j, x, y);
+          // }
           if (lightField.find(i) == lightField.end() || lightField[i].find(j) == lightField[i].end() || lightField[i][j].find(x) == lightField[i][j].end() || lightField[i][j][x].find(y) == lightField[i][j][x].end()) {
             continue;
           }
@@ -287,8 +290,8 @@ void Camera::refocused_lightField(double newFocalDistance, double bufferWidth, d
 
           Vector3D pLens = Vector3D(lensX, lensY, 0.0);
 
-          Vector3D bottomLeft = Vector3D(-tan(radians(hFov)*.5), -tan(radians(vFov)*.5),-1);
-          Vector3D topRight = Vector3D( tan(radians(hFov)*.5),  tan(radians(vFov)*.5),-1);
+          Vector3D bottomLeft = Vector3D(-tan(radians(hFov)*.5), -tan(radians(vFov)*.5), -1);
+          Vector3D topRight = Vector3D( tan(radians(hFov)*.5),  tan(radians(vFov)*.5), -1);
 
           double newX = bottomLeft.x * (1.0 - (x / bufferWidth)) + topRight.x * (x / bufferWidth);
           double newY = bottomLeft.y * (1.0 - (y / bufferHeight)) + topRight.y * (y / bufferHeight);
@@ -303,12 +306,31 @@ void Camera::refocused_lightField(double newFocalDistance, double bufferWidth, d
           destination = r.o + newFocalDistance * r.d;
           // need to convert destination coordinates back
 
-          double revertedX = trunc(((destination.x - bottomLeft.x) * bufferWidth) / (topRight.x - bottomLeft.x));
-          double revertedY = trunc(((destination.y - bottomLeft.y) * bufferHeight) / (topRight.y - bottomLeft.y));
+          //Start of trial
+          Vector3D bottomLeftOfLens = Vector3D(-lensRadius, -lensRadius, 0);
+          Vector3D topRightOfLens = Vector3D(lensRadius, lensRadius, 0);
+          Vector3D newBottomLeft = (topRightOfLens + newFocalDistance * (Vector3D(bottomLeft.x, bottomLeft.y, 1) - topRightOfLens));
+          Vector3D newTopRight = (bottomLeftOfLens + newFocalDistance * (Vector3D(topRight.x, topRight.y, 1) - bottomLeftOfLens));
 
-          if (revertedX >= bufferWidth || revertedX < 0 || revertedY >= bufferHeight || revertedY < 0) {
-            continue;
-          }
+          double newBufferWidth = (newTopRight.x - newBottomLeft.x) / (topRight.x - bottomLeft.x) * bufferWidth;
+          double newBufferHeight = (newTopRight.y - newBottomLeft.y) / (topRight.y - bottomLeft.y) * bufferHeight;
+
+          double revertedX = ((destination.x - newBottomLeft.x) * newBufferWidth) / (newTopRight.x - newBottomLeft.x);
+          double revertedY = ((destination.y - newBottomLeft.y) * newBufferHeight) / (newTopRight.y - newBottomLeft.y);
+
+          revertedX = trunc(revertedX * (bufferWidth / newBufferWidth));
+          revertedY = trunc(revertedY * (bufferHeight / newBufferHeight));
+          // End of trial
+
+          // double revertedX = trunc(((destination.x - bottomLeft.x) * bufferWidth) / (topRight.x - bottomLeft.x));
+          // double revertedY = trunc(((destination.y - bottomLeft.y) * bufferHeight) / (topRight.y - bottomLeft.y));
+
+          // if (revertedX >= bufferWidth || revertedX < 0 || revertedY >= bufferHeight || revertedY < 0) {
+          //   continue;
+          // }
+          // if (i == 9.0 || i == 11.0 || i == 13.0 || i == 15.0) {
+          //   printf("After revert setting [%f][%f][%f][%f] equal to [%f][%f][%f][%f]\n", i, j, revertedX, revertedY, i, j, x, y);
+          // }
           newLightField[i][j][revertedX][revertedY] = lightField[i][j][x][y];
         }
       }
